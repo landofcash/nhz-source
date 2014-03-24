@@ -1,0 +1,140 @@
+package nhz.http;
+
+import nhz.Constants;
+import nhz.Nhz;
+import nhz.util.Logger;
+import nhz.util.ThreadPool;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.DefaultHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.FilterMapping;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+public final class API {
+
+    private static final int TESTNET_API_PORT = 6876;
+
+    static final Set<String> allowedBotHosts;
+
+    static {
+        String allowedBotHostsString = Nhz.getStringProperty("nhz.allowedBotHosts");
+        if (! allowedBotHostsString.equals("*")) {
+            Set<String> hosts = new HashSet<>();
+            for (String allowedBotHost : allowedBotHostsString.split(";")) {
+                allowedBotHost = allowedBotHost.trim();
+                if (allowedBotHost.length() > 0) {
+                    hosts.add(allowedBotHost);
+                }
+            }
+            allowedBotHosts = Collections.unmodifiableSet(hosts);
+        } else {
+            allowedBotHosts = null;
+        }
+
+        boolean enableAPIServer = Nhz.getBooleanProperty("nhz.enableAPIServer");
+        if (enableAPIServer) {
+            final int port = Constants.isTestnet ? TESTNET_API_PORT : Nhz.getIntProperty("nhz.apiServerPort");
+            final String host = Nhz.getStringProperty("nhz.apiServerHost");
+            final Server apiServer = new Server();
+            ServerConnector connector;
+
+            boolean enableSSL = Nhz.getBooleanProperty("nhz.apiSSL");
+            if (enableSSL) {
+                Logger.logMessage("Using SSL (https) for the API server");
+                HttpConfiguration https_config = new HttpConfiguration();
+                https_config.setSecureScheme("https");
+                https_config.setSecurePort(port);
+                https_config.addCustomizer(new SecureRequestCustomizer());
+                SslContextFactory sslContextFactory = new SslContextFactory();
+                sslContextFactory.setKeyStorePath(Nhz.getStringProperty("nhz.keyStorePath"));
+                sslContextFactory.setKeyStorePassword(Nhz.getStringProperty("nhz.keyStorePassword"));
+                sslContextFactory.setExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
+                        "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                        "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
+                connector = new ServerConnector(apiServer, new SslConnectionFactory(sslContextFactory, "http/1.1"),
+                        new HttpConnectionFactory(https_config));
+            } else {
+                connector = new ServerConnector(apiServer);
+            }
+
+            connector.setPort(port);
+            connector.setHost(host);
+            connector.setIdleTimeout(Nhz.getIntProperty("nhz.apiServerIdleTimeout"));
+            apiServer.addConnector(connector);
+
+            HandlerList apiHandlers = new HandlerList();
+
+            String apiResourceBase = Nhz.getStringProperty("nhz.apiResourceBase");
+            if (apiResourceBase != null) {
+                ResourceHandler apiFileHandler = new ResourceHandler();
+                apiFileHandler.setDirectoriesListed(true);
+                apiFileHandler.setWelcomeFiles(new String[]{"index.html"});
+                apiFileHandler.setResourceBase(apiResourceBase);
+                apiHandlers.addHandler(apiFileHandler);
+            }
+
+            String javadocResourceBase = Nhz.getStringProperty("nhz.javadocResourceBase");
+            if (javadocResourceBase != null) {
+                ContextHandler contextHandler = new ContextHandler("/doc");
+                ResourceHandler docFileHandler = new ResourceHandler();
+                docFileHandler.setDirectoriesListed(false);
+                docFileHandler.setWelcomeFiles(new String[]{"index.html"});
+                docFileHandler.setResourceBase(javadocResourceBase);
+                contextHandler.setHandler(docFileHandler);
+                apiHandlers.addHandler(contextHandler);
+            }
+
+            ServletHandler apiHandler = new ServletHandler();
+            apiHandler.addServletWithMapping(APIServlet.class, "/nhz");
+
+            if (Nhz.getBooleanProperty("nhz.apiServerCORS")) {
+                FilterHolder filterHolder = apiHandler.addFilterWithMapping(CrossOriginFilter.class, "/*", FilterMapping.DEFAULT);
+                filterHolder.setInitParameter("allowedHeaders", "*");
+                filterHolder.setAsyncSupported(true);
+            }
+
+            apiHandlers.addHandler(apiHandler);
+            apiHandlers.addHandler(new DefaultHandler());
+
+            apiServer.setHandler(apiHandlers);
+            apiServer.setStopAtShutdown(true);
+
+            ThreadPool.runBeforeStart(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        apiServer.start();
+                        Logger.logMessage("Started API server at " + host + ":" + port);
+                    } catch (Exception e) {
+                        Logger.logDebugMessage("Failed to start API server", e);
+                        throw new RuntimeException(e.toString(), e);
+                    }
+
+                }
+            });
+
+        } else {
+            Logger.logMessage("API server not enabled");
+        }
+
+    }
+
+    public static void init() {}
+
+    private API() {} // never
+
+}
