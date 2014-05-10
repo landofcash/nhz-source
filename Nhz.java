@@ -6,14 +6,25 @@ import nhz.user.Users;
 import nhz.util.Logger;
 import nhz.util.ThreadPool;
 
+import nhz.upnp.GatewayDevice;
+import nhz.upnp.GatewayDeviceHandler;
+import nhz.upnp.GatewayDiscover;
+import nhz.upnp.NameValueHandler;
+import nhz.upnp.PortMappingEntry;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import java.net.InetAddress;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Map;
+
 public final class Nhz {
 
-    public static final String VERSION = "NHZ V2";
+    public static final String VERSION = "NHZ V2.2";
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -110,9 +121,36 @@ public final class Nhz {
         init();
     }
 
-    public static void init() {
+    public static void init(){
         Init.init();
     }
+	
+	public static void upnp() throws Exception {
+	// UPNP START
+			GatewayDiscover gatewayDiscover = new GatewayDiscover();
+			Logger.logMessage("starting upnp detection");
+
+			gatewayDiscover.discover();
+		
+			GatewayDevice activeGW = gatewayDiscover.getValidGateway();
+			
+			InetAddress localAddress = activeGW.getLocalAddress();
+			Logger.logMessage("UPNP: local address: "+ localAddress.getHostAddress());
+			String externalIPAddress = activeGW.getExternalIPAddress();
+			Logger.logMessage("UPNP: external address: "+ externalIPAddress);
+
+			PortMappingEntry portMapping = new PortMappingEntry();
+			activeGW.getGenericPortMappingEntry(0,portMapping);
+			
+			if (activeGW.getSpecificPortMappingEntry(7774,"TCP",portMapping)) {
+				Logger.logMessage("UPNP: Port "+7774+" is already mapped!");
+				return;
+			} else {
+				Logger.logMessage("UPNP: sending port mapping request for port "+7774);
+				activeGW.addPortMapping(7774,7774,localAddress.getHostAddress(),"TCP","NHZ");		
+			} 
+		// UPNP STOP
+	}
 
     public static void shutdown() {
         Peers.shutdown();
@@ -124,10 +162,12 @@ public final class Nhz {
     private static class Init {
 
         static {
-
+		
             long startTime = System.currentTimeMillis();
 
             Logger.logMessage("logging enabled");
+			
+			try{upnp();}catch(Exception e){Logger.logMessage("upnp detection failed");}
 
             if (! Nhz.getBooleanProperty("nhz.debugJetty")) {
                 System.setProperty("org.eclipse.jetty.LEVEL", "OFF");

@@ -128,7 +128,7 @@ public final class Peers {
             json.put("hallmark", Peers.myHallmark);
         }
         json.put("application", "NRS");
-        json.put("version", "NHZ V2");
+        json.put("version", Nhz.VERSION);
         json.put("platform", Peers.myPlatform);
         json.put("shareAddress", Peers.shareMyAddress);
         Logger.logDebugMessage("My peer info:\n" + json.toJSONString());
@@ -147,17 +147,39 @@ public final class Peers {
             }
         } else if (! Constants.isTestnet) {
             Logger.logMessage("No wellKnownPeers defined, using pre-defined one");
-			addresses.add("snxt.chapter9.org");
-			addresses.add("horizon.chapter9.org");
-			addresses.add("digital.chapter9.org");
-			addresses.add("85.214.65.220");
+            //snxt.nhzcrypto.org;horizon.nhzcrypto.org;digital.nhzcrypto.org;5.45.97.233;85.25.67.39;82.118.242.244;37.187.237.56;37.187.237.211;5.45.97.233;137.117.84.21;54.193.59.188;188.226.217.137;85.25.67.39;198.50.146.167;128.199.197.56;54.186.81.151;188.226.207.183;85.214.65.220;168.63.251.208;80.241.220.178;23.97.166.145;107.170.116.134;37.187.237.150;198.211.122.85;31.19.188.145;37.187.237.114;37.187.225.106;191.235.134.92;37.187.18.97;146.185.168.63;pool.nhzcrypto.org;horizon.nhzcrypto.org
+			addresses.add("snxt.nhzcrypto.org");
+			addresses.add("horizon.nhzcrypto.org");
+			addresses.add("digital.nhzcrypto.org");	
 			addresses.add("5.45.97.233");
 			addresses.add("85.25.67.39");
+			addresses.add("82.118.242.244");
+			addresses.add("37.187.237.56");
+			addresses.add("37.187.237.211");
+			addresses.add("5.45.97.233");
+			addresses.add("137.117.84.21");
+			addresses.add("54.193.59.188");
 			addresses.add("188.226.217.137");
-			addresses.add("107.170.116.134");
+			addresses.add("85.25.67.39");
+			addresses.add("198.50.146.167");
+			addresses.add("128.199.197.56");
+			addresses.add("54.186.81.151");
+			addresses.add("188.226.207.183");
+			addresses.add("85.214.65.220");
+			addresses.add("168.63.251.208");
 			addresses.add("80.241.220.178");
-			
-            
+			addresses.add("23.97.166.145");
+			addresses.add("107.170.116.134");
+			addresses.add("37.187.237.150");
+			addresses.add("198.211.122.85");
+			addresses.add("31.19.188.145");
+			addresses.add("37.187.237.114");
+			addresses.add("37.187.225.106");
+			addresses.add("191.235.134.92");
+			addresses.add("37.187.18.97");
+			addresses.add("146.185.168.63");  
+			addresses.add("pool.nhzcrypto.org");
+			addresses.add("horizon.nhzcrypto.org");
         }
         wellKnownPeers = Collections.unmodifiableSet(addresses);
 

@@ -386,6 +386,7 @@ final class PeerImpl implements Peer {
 
         if (hallmarkString == null) {
             this.hallmark = null;
+	   Logger.logMessage("deleted hallmark from ip: " + address + "\n");
             return true;
         }
 
