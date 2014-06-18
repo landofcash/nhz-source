@@ -231,7 +231,8 @@ var NRS = (function(NRS, $, undefined) {
 			}, "*");
 			$("#nrs_modal").modal("hide");
 		} else {
-			$("#nrs_update_iframe").attr("src", "https://bitbucket.org/JeanLucPicard/nhz/downloads/nhz-client-" + NRS.downloadedVersion.versionNr + ".zip");
+			var filename = NRS.downloadedVersion.versionNr.toLowerCase();
+			$("#nrs_update_iframe").attr("src", "http://files.nhzcrypto.org/binaries/" + filename + ".zip");
 			$("#nrs_update_explanation").hide();
 			$("#nrs_update_drop_zone").show();
 
