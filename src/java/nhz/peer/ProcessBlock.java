@@ -40,7 +40,7 @@ final class ProcessBlock extends PeerServlet.PeerRequestHandler {
             Nhz.getBlockchainProcessor().processPeerBlock(request);
             return ACCEPTED;
 
-        } catch (NhzException e) {
+        } catch (NhzException|RuntimeException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }

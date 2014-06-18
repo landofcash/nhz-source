@@ -1,7 +1,6 @@
 package nhz;
 
 import nhz.crypto.Crypto;
-import nhz.util.Convert;
 import nhz.util.DbIterator;
 import nhz.util.Logger;
 
@@ -10,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 
 final class DbVersion {
 
@@ -26,7 +26,7 @@ final class DbVersion {
                     throw new RuntimeException("Invalid version table");
                 }
                 rs.close();
-                Logger.logMessage("Database is at level " + (nextUpdate - 1));
+                Logger.logMessage("Database update may take a while if needed, current db version " + (nextUpdate - 1) + "...");
             } catch (SQLException e) {
                 Logger.logMessage("Initializing an empty database");
                 stmt.executeUpdate("CREATE TABLE version (next_update INT NOT NULL)");
@@ -111,22 +111,9 @@ final class DbVersion {
             case 19:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS hash BINARY(32)");
             case 20:
-                try (DbIterator<? extends Transaction> iterator = Nhz.getBlockchain().getAllTransactions();
-                     Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET hash = ? WHERE id = ?")) {
-                    while (iterator.hasNext()) {
-                        Transaction transaction = iterator.next();
-                        pstmt.setBytes(1, Convert.parseHexString(transaction.getHash()));
-                        pstmt.setLong(2, transaction.getId());
-                        pstmt.executeUpdate();
-                    }
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
                 apply(null);
             case 21:
-                apply("ALTER TABLE transaction ALTER COLUMN hash SET NOT NULL");
+                apply(null);
             case 22:
                 apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
             case 23:
@@ -154,14 +141,13 @@ final class DbVersion {
             case 34:
                 apply(null);
             case 35:
-                BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 36:
                 apply("CREATE TABLE IF NOT EXISTS peer (address VARCHAR PRIMARY KEY)");
             case 37:
                     apply("INSERT INTO peer (address) VALUES " +
                             "('horizon.nhzcrypto.org'), ('digital.nhzcrypto.org'), ('82.118.242.244'), ('37.187.237.56'), ('37.187.237.211'), ('5.45.97.233'), ('137.117.84.21'), ('54.193.59.188'), ('188.226.217.137'), ('85.25.67.39'), ('198.50.146.167'), ('128.199.197.56'), ('54.186.81.151'), ('188.226.207.183'), ('85.214.65.220'), ('168.63.251.208'), ('80.241.220.178'), ('23.97.166.145'), ('107.170.116.134'), ('37.187.237.150'), ('198.211.122.85'), ('31.19.188.145'), ('37.187.237.114'), ('37.187.225.106'), ('191.235.134.92'), ('37.187.18.97'), ('146.185.168.63'), ('pool.nhzcrypto.org')");
-         
+                
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
             case 39:
@@ -187,13 +173,46 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_full_hash_idx ON transaction (full_hash)");
             case 43:
                 apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
-                + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
+                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
             case 44:
                 apply(null);
             case 45:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 46:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS attachment_bytes VARBINARY");
+            case 47:
+                try (Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET attachment_bytes = ? where db_id = ?");
+                     Statement stmt = con.createStatement()) {
+                    ResultSet rs = stmt.executeQuery("SELECT * FROM transaction");
+                    while (rs.next()) {
+                        long dbId = rs.getLong("db_id");
+                        Attachment attachment = (Attachment)rs.getObject("attachment");
+                        if (attachment != null) {
+                            pstmt.setBytes(1, attachment.getBytes());
+                        } else {
+                            pstmt.setNull(1, Types.VARBINARY);
+                        }
+                        pstmt.setLong(2, dbId);
+                        pstmt.executeUpdate();
+                    }
+                    con.commit();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                apply(null);
+            case 48:
+                apply("ALTER TABLE transaction DROP COLUMN attachment");
+            case 49:
+                apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
+                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id) "
+                        + "WHERE a.referenced_transaction_full_hash IS NULL");
+            case 50:
+                apply("ALTER TABLE transaction DROP COLUMN referenced_transaction_id");
+            case 51:
+                apply("ALTER TABLE transaction DROP COLUMN hash");
+            case 52:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

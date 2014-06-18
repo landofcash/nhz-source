@@ -1,0 +1,46 @@
+(function() {
+  var template = Handlebars.template, templates = Handlebars.templates = Handlebars.templates || {};
+templates['peer.html'] = template({"1":function(depth0,helpers,partials,data) {
+  var helper, functionType="function", escapeExpression=this.escapeExpression;
+  return "\n			<td class=\"icon-cell icon-weight "
+    + escapeExpression(((helper = helpers.weightClass || (depth0 && depth0.weightClass)),(typeof helper === functionType ? helper.call(depth0, {"name":"weightClass","hash":{},"data":data}) : helper)))
+    + "\">\n				<span class=\"icon icon-lightning\"></span>\n			</td>\n			<td class=\"weight "
+    + escapeExpression(((helper = helpers.weightClass || (depth0 && depth0.weightClass)),(typeof helper === functionType ? helper.call(depth0, {"name":"weightClass","hash":{},"data":data}) : helper)))
+    + "\">\n				"
+    + escapeExpression(((helper = helpers.weight || (depth0 && depth0.weight)),(typeof helper === functionType ? helper.call(depth0, {"name":"weight","hash":{},"data":data}) : helper)))
+    + "\n			</td>\n\n			<td class=\"icon-cell icon-uploaded uploaded-downloaded\">\n				<span class=\"icon icon-upload\"></span>\n			</td>\n			<td class=\"uploaded-downloaded uploaded\" title=\""
+    + escapeExpression(((helper = helpers.uploadedTitleText || (depth0 && depth0.uploadedTitleText)),(typeof helper === functionType ? helper.call(depth0, {"name":"uploadedTitleText","hash":{},"data":data}) : helper)))
+    + "\">\n				"
+    + escapeExpression(((helper = helpers.uploadedFormatted || (depth0 && depth0.uploadedFormatted)),(typeof helper === functionType ? helper.call(depth0, {"name":"uploadedFormatted","hash":{},"data":data}) : helper)))
+    + "\n			</td>\n\n			<td class=\"icon-cell icon-downloaded uploaded-downloaded\">\n				<span class=\"icon icon-download\"></span>\n			</td>\n			<td class=\"uploaded-downloaded downloaded\" title=\""
+    + escapeExpression(((helper = helpers.downloadedTitleText || (depth0 && depth0.downloadedTitleText)),(typeof helper === functionType ? helper.call(depth0, {"name":"downloadedTitleText","hash":{},"data":data}) : helper)))
+    + "\">\n				"
+    + escapeExpression(((helper = helpers.downloadedFormatted || (depth0 && depth0.downloadedFormatted)),(typeof helper === functionType ? helper.call(depth0, {"name":"downloadedFormatted","hash":{},"data":data}) : helper)))
+    + "\n			</td>\n\n			<td>\n				"
+    + escapeExpression(((helper = helpers.software || (depth0 && depth0.software)),(typeof helper === functionType ? helper.call(depth0, {"name":"software","hash":{},"data":data}) : helper)))
+    + "\n			</td>\n\n			<td class=\"actions\">\n				<span class=\"icon icon-close remove\" title=\""
+    + escapeExpression(((helper = helpers.removeTitleText || (depth0 && depth0.removeTitleText)),(typeof helper === functionType ? helper.call(depth0, {"name":"removeTitleText","hash":{},"data":data}) : helper)))
+    + "\"></span>\n			</td>\n		";
+},"compiler":[5,">= 2.0.0"],"main":function(depth0,helpers,partials,data) {
+  var stack1, helper, functionType="function", escapeExpression=this.escapeExpression, buffer = "<script id=\"peer-template\" type=\"text/x-handlebars-template\">\n\n	<tr class=\"peer-"
+    + escapeExpression(((helper = helpers.index || (depth0 && depth0.index)),(typeof helper === functionType ? helper.call(depth0, {"name":"index","hash":{},"data":data}) : helper)))
+    + "\" data-filters=\""
+    + escapeExpression(((helper = helpers.filters || (depth0 && depth0.filters)),(typeof helper === functionType ? helper.call(depth0, {"name":"filters","hash":{},"data":data}) : helper)))
+    + "\" data-index=\""
+    + escapeExpression(((helper = helpers.index || (depth0 && depth0.index)),(typeof helper === functionType ? helper.call(depth0, {"name":"index","hash":{},"data":data}) : helper)))
+    + "\">\n		<td class=\"icon-cell connection-state-cell "
+    + escapeExpression(((helper = helpers.stateClass || (depth0 && depth0.stateClass)),(typeof helper === functionType ? helper.call(depth0, {"name":"stateClass","hash":{},"data":data}) : helper)))
+    + "\" title=\""
+    + escapeExpression(((helper = helpers.state || (depth0 && depth0.state)),(typeof helper === functionType ? helper.call(depth0, {"name":"state","hash":{},"data":data}) : helper)))
+    + "\">\n			<span class=\"icon icon-broadcast\"></span>\n		</td>\n		<td class=\""
+    + escapeExpression(((helper = helpers.addressTypeClass || (depth0 && depth0.addressTypeClass)),(typeof helper === functionType ? helper.call(depth0, {"name":"addressTypeClass","hash":{},"data":data}) : helper)))
+    + "\" title=\""
+    + escapeExpression(((helper = helpers.announcedAddress || (depth0 && depth0.announcedAddress)),(typeof helper === functionType ? helper.call(depth0, {"name":"announcedAddress","hash":{},"data":data}) : helper)))
+    + "\">\n			"
+    + escapeExpression(((helper = helpers.announcedAddressFormatted || (depth0 && depth0.announcedAddressFormatted)),(typeof helper === functionType ? helper.call(depth0, {"name":"announcedAddressFormatted","hash":{},"data":data}) : helper)))
+    + "\n		</td>\n\n		";
+  stack1 = helpers['if'].call(depth0, (depth0 && depth0.active), {"name":"if","hash":{},"fn":this.program(1, data),"inverse":this.noop,"data":data});
+  if(stack1 || stack1 === 0) { buffer += stack1; }
+  return buffer + "\n	</tr>\n\n</script>";
+},"useData":true});
+})();

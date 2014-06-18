@@ -65,12 +65,12 @@ public final class Account {
                 while (iterator.hasNext()) {
                     Account account = iterator.next().getValue();
                     if (height == account.currentLeasingHeightFrom) {
-                        Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                        Account.getAccount(account.currentLesseeId).lessorIds.add(account.getId());
                         leaseListeners.notify(
                                 new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
                                 Event.LEASE_STARTED);
                     } else if (height == account.currentLeasingHeightTo) {
-                        Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
+                        Account.getAccount(account.currentLesseeId).lessorIds.remove(account.getId());
                         leaseListeners.notify(
                                 new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
                                 Event.LEASE_ENDED);
@@ -85,7 +85,7 @@ public final class Account {
                             account.nextLeasingHeightFrom = Integer.MAX_VALUE;
                             account.nextLesseeId = null;
                             if (height == account.currentLeasingHeightFrom) {
-                                Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                                Account.getAccount(account.currentLesseeId).lessorIds.add(account.getId());
                                 leaseListeners.notify(
                                         new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
                                         Event.LEASE_STARTED);
@@ -197,7 +197,7 @@ public final class Account {
     private volatile int nextLeasingHeightFrom;
     private volatile int nextLeasingHeightTo;
     private volatile Long nextLesseeId;
-    private Set<Long> leaserIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
+    private Set<Long> lessorIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
 
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
@@ -255,7 +255,7 @@ public final class Account {
         Block lastBlock = Nhz.getBlockchain().getLastBlock();
 
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
-              //  && (publicKey == null || keyHeight == -1 || lastBlock.getHeight() - keyHeight <= 1440)) {
+                //&& (publicKey == null || keyHeight == -1 || lastBlock.getHeight() - keyHeight <= 1440)) {
 				&& (publicKey == null || keyHeight == -1 || lastBlock.getHeight() - keyHeight <= 40)) {
             return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
         }
@@ -279,21 +279,21 @@ public final class Account {
         }
 
         if (lastBlock.getHeight() < currentLeasingHeightFrom) {
-                //return (getGuaranteedBalanceNQT(1440) + getExtraEffectiveBalanceNQT()) / Constants.ONE_NHZ;
-				return (getGuaranteedBalanceNQT(40) + getExtraEffectiveBalanceNQT()) / Constants.ONE_NHZ;
+                //return (getGuaranteedBalanceNQT(1440) + getLessorsGuaranteedBalanceNQT()) / Constants.ONE_NHZ;
+				return (getGuaranteedBalanceNQT(40) + getLessorsGuaranteedBalanceNQT()) / Constants.ONE_NHZ;
         }
 
-        return getExtraEffectiveBalanceNQT() / Constants.ONE_NHZ;
+        return getLessorsGuaranteedBalanceNQT() / Constants.ONE_NHZ;
 
     }
 
-    private long getExtraEffectiveBalanceNQT() {
-        long extraEffectiveBalanceNQT = 0;
-        for (Long accountId : leaserIds) {
-            //extraEffectiveBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(1440);
-			extraEffectiveBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(40);
+    private long getLessorsGuaranteedBalanceNQT() {
+        long lessorsGuaranteedBalanceNQT = 0;
+        for (Long accountId : lessorIds) {
+            //lessorsGuaranteedBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(1440);
+			lessorsGuaranteedBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(40);
         }
-        return extraEffectiveBalanceNQT;
+        return lessorsGuaranteedBalanceNQT;
     }
 
     public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
@@ -360,8 +360,8 @@ public final class Account {
         return nextLeasingHeightTo;
     }
 
-    public Set<Long> getLeaserIds() {
-        return Collections.unmodifiableSet(leaserIds);
+    public Set<Long> getLessorIds() {
+        return Collections.unmodifiableSet(lessorIds);
     }
 
     void leaseEffectiveBalance(Long lesseeId, short period) {

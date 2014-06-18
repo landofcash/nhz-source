@@ -3,7 +3,6 @@ package nhz.peer;
 import nhz.Account;
 import nhz.BlockchainProcessor;
 import nhz.Constants;
-import nhz.NhzException;
 import nhz.TransactionType;
 import nhz.util.Convert;
 import nhz.util.CountingInputStream;
@@ -198,14 +197,14 @@ final class PeerImpl implements Peer {
     }
 
     @Override
-    public void blacklist(NhzException cause) {
+    public void blacklist(Exception cause) {
         if (cause instanceof TransactionType.NotYetEnabledException || cause instanceof BlockchainProcessor.BlockOutOfOrderException) {
             // don't blacklist peers just because a feature is not yet enabled
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
         }
         if (! isBlacklisted()) {
-            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage());
+            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString());
         }
         blacklist();
     }

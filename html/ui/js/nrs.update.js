@@ -1,8 +1,20 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.normalVersion = {};
 	NRS.betaVersion = {};
+	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
+		if (NRS.downloadingBlockchain) {
+			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation_blockchain_sync").show();
+			return;
+		}
+		if (NRS.isTestNet) {
+			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation_testnet").show();
+			return;
+		}
+
 		//Get latest version nr+hash of normal version
 		NRS.sendRequest("getAliasURI", {
 			"alias": "nrsversion"
@@ -10,7 +22,6 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.uri && (response = response.uri.split(" "))) {
 				NRS.normalVersion.versionNr = response[0];
 				NRS.normalVersion.hash = response[1];
-
 				if (NRS.normalVersion.versionNr) {
 					NRS.checkForNewVersion();
 				}
@@ -47,15 +58,19 @@ var NRS = (function(NRS, $, undefined) {
 		$(".nrs_beta_version_nr").html(NRS.betaVersion.versionNr).show();
 
 		if (installVersusNormal == -1 && installVersusBeta == -1) {
+			NRS.isOutdated = true;
 			$("#nrs_update").html("Outdated!").show();
 			$("#nrs_update_explanation_new_choice").show();
 		} else if (installVersusBeta == -1) {
+			NRS.isOutdated = false;
 			$("#nrs_update").html("New Beta").show();
 			$("#nrs_update_explanation_new_beta").show();
 		} else if (installVersusNormal == -1) {
+			NRS.isOutdated = true;
 			$("#nrs_update").html("Outdated!").show();
 			$("#nrs_update_explanation_new_release").show();
 		} else {
+			NRS.isOutdated = false;
 			$("#nrs_update_explanation_up_to_date").show();
 		}
 	}
@@ -67,9 +82,9 @@ var NRS = (function(NRS, $, undefined) {
 			return -1;
 		}
 
-		v1 = v1.substr(5);
+                v1 = v1.substr(5);
 		v2 = v2.substr(5);
-
+		
 		//https://gist.github.com/TheDistantSea/8021359 (based on)
 		var v1last = v1.slice(-1);
 		var v2last = v2.slice(-1);
@@ -213,10 +228,10 @@ var NRS = (function(NRS, $, undefined) {
 					"version": NRS.downloadedVersion.versionNr,
 					"hash": NRS.downloadedVersion.hash
 				}
-			});
+			}, "*");
+			$("#nrs_modal").modal("hide");
 		} else {
-			var filename = NRS.downloadedVersion.versionNr.toLowerCase();
-			$("#nrs_update_iframe").attr("src", "http://files.nhzcrypto.org/binaries/" + filename + ".zip");
+			$("#nrs_update_iframe").attr("src", "https://bitbucket.org/JeanLucPicard/nhz/downloads/nhz-client-" + NRS.downloadedVersion.versionNr + ".zip");
 			$("#nrs_update_explanation").hide();
 			$("#nrs_update_drop_zone").show();
 

@@ -23,22 +23,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
-
     private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{-75, -47, 54, -19, 77, 48, 32, 97, 126, -111, -41, 90, 18, 116, 2, 45, -2, 68, -33, 38, 108, -105, -10, 69, -51, 112, 81, 110, 33, 59, 34, 23};
 	private static final byte[] CHECKSUM_BLOCK_1000 = new byte[]{ -119, -41, 39, -28, -91, -89, -63, -64, -105, -7, -120, -108, -104, 31, 23, 31,117, 29, -57, -71, 22, -31, 86, 77, -5, -94, 11, 61, 14, 91, 63, -24};
-    private static final byte[] CHECKSUM_NQT_BLOCK = null;
-	
+    private static final byte[] CHECKSUM_NQT_BLOCK = new byte[]{106, -81, -37, -67, 107, 97, 86, -66, -76, -111, 3, -79, -50, -57, 81, 122, -50, -86, 34, 58, 72, -67, 33, -26, 94, -98, -12, -1, 81, 91, -63, -64};
+
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
     static BlockchainProcessorImpl getInstance() {
@@ -116,6 +113,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Long currentBlockId = commonBlockId;
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
+                    boolean processedAll = true;
                     outer:
                     while (true) {
 
@@ -132,9 +130,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 try {
                                     block = parseBlock(blockData);
                                 } catch (NhzException.ValidationException e) {
-                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage()
-                                            + ", will try again later");
+                                    Logger.logDebugMessage("Cannot validate block: " + e.toString()
+                                            + ", will try again later", e);
+                                    processedAll = false;
                                     break outer;
+                                } catch (RuntimeException e) {
+                                    Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
+                                    peer.blacklist();
+                                    return;
                                 }
                                 currentBlockId = block.getId();
 
@@ -155,7 +158,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                     }
 
-                    if (! forkBlocks.isEmpty() && blockchain.getLastBlock().getHeight() - commonBlock.getHeight() < 720) {
+                    if (forkBlocks.size() > 0) {
+                        processedAll = false;
+                    }
+
+                    if (! processedAll && blockchain.getLastBlock().getHeight() - commonBlock.getHeight() < 720) {
                         processFork(peer, forkBlocks, commonBlock);
                     }
 
@@ -284,11 +291,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     while (! blockchain.getLastBlock().getId().equals(commonBlock.getId()) && popLastBlock()) {
                     }
 
+                    int pushedForkBlocks = 0;
                     if (blockchain.getLastBlock().getId().equals(commonBlock.getId())) {
                         for (BlockImpl block : forkBlocks) {
                             if (blockchain.getLastBlock().getId().equals(block.getPreviousBlockId())) {
                                 try {
                                     pushBlock(block);
+                                    pushedForkBlocks += 1;
                                 } catch (BlockNotAcceptedException e) {
                                     peer.blacklist(e);
                                     break;
@@ -297,7 +306,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
                     }
 
-                    needsRescan = blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0;
+                    needsRescan = pushedForkBlocks > 0 && blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0;
                     if (needsRescan) {
                         Logger.logDebugMessage("Rescan caused by peer " + peer.getPeerAddress() + ", blacklisting");
                         peer.blacklist();
@@ -440,22 +449,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private byte[] calculateTransactionsChecksum() {
-        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(blockchain.getTransactionCount(), new Comparator<Transaction>() {
-            @Override
-            public int compare(Transaction o1, Transaction o2) {
-                long id1 = o1.getId();
-                long id2 = o2.getId();
-                return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.getTimestamp() < o2.getTimestamp() ? -1 : (o1.getTimestamp() > o2.getTimestamp() ? 1 : 0)));
-            }
-        });
-        try (DbIterator<TransactionImpl> iterator = blockchain.getAllTransactions()) {
-            while (iterator.hasNext()) {
-                sortedTransactions.add(iterator.next());
-            }
-        }
         MessageDigest digest = Crypto.sha256();
-        while (! sortedTransactions.isEmpty()) {
-            digest.update(sortedTransactions.poll().getBytes());
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement(
+                     "SELECT * FROM transaction ORDER BY id ASC, timestamp ASC");
+             DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
+            while (iterator.hasNext()) {
+                digest.update(iterator.next().getBytes());
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
         }
         return digest.digest();
     }
@@ -501,6 +504,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 }
 
+                if (previousLastBlock.getHeight() == Constants.NQT_BLOCK) {
+                    byte[] checksum = calculateTransactionsChecksum();
+                    if (CHECKSUM_NQT_BLOCK == null) {
+                        Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
+                    } else if (!Arrays.equals(checksum, CHECKSUM_NQT_BLOCK)) {
+                        Logger.logMessage("Checksum failed at block " + Constants.NQT_BLOCK);
+                        throw new BlockNotAcceptedException("Checksum failed");
+                    } else {
+                        Logger.logMessage("Checksum passed at block " + Constants.NQT_BLOCK);
+                    }
+                }
+
                 if (block.getVersion() != 1 && ! Arrays.equals(Crypto.sha256().digest(previousLastBlock.getBytes()), block.getPreviousBlockHash())) {
                     throw new BlockNotAcceptedException("Previous block hash doesn't match");
                 }
@@ -538,10 +553,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
                                 + " is already in the blockchain", transaction);
                     }
-                    if ((transaction.getReferencedTransactionId() != null
-                            && ! TransactionDb.hasTransaction(transaction.getReferencedTransactionId()))) {
-                        throw new TransactionNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
-                                + " for transaction " + transaction.getStringId(), transaction);
+                    if (transaction.getReferencedTransactionFullHash() != null) {
+                        if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash())))
+                                || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
+                            throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
+                                    + transaction.getReferencedTransactionFullHash()
+                                    + " for transaction " + transaction.getStringId(), transaction);
+                        }
                     }
                     if (! transaction.verify()) {
                         throw new TransactionNotAcceptedException("Signature verification failed for transaction "
@@ -595,12 +615,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 block.setPrevious(previousLastBlock);
-
-                TransactionImpl duplicateTransaction = transactionProcessor.checkTransactionHashes(block);
-                if (duplicateTransaction != null) {
-                    throw new TransactionNotAcceptedException("Duplicate hash of transaction "
-                            + duplicateTransaction.getStringId(), duplicateTransaction);
-                }
 
                 addBlock(block);
 
@@ -656,7 +670,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
 
         for (TransactionImpl transaction : transactionProcessor.getAllUnconfirmedTransactions()) {
-            if (transaction.getReferencedTransactionId() == null || TransactionDb.hasTransaction(transaction.getReferencedTransactionId())) {
+            if (hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0)) {
                 sortedTransactions.add(transaction);
             }
         }
@@ -671,16 +685,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         int blockTimestamp = Convert.getEpochTime();
 
-        int maxPayloadLength = Constants.MAX_NUMBER_OF_TRANSACTIONS *
-                (blockchain.getLastBlock().getHeight() < Constants.NQT_BLOCK ? 128 : 160);
-        while (payloadLength <= maxPayloadLength) {
+        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH) {
 
             int prevNumberOfNewTransactions = newTransactions.size();
 
             for (TransactionImpl transaction : sortedTransactions) {
 
                 int transactionLength = transaction.getSize();
-                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > maxPayloadLength) {
+                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
                     continue;
                 }
 
@@ -781,41 +793,29 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private BlockImpl parseBlock(JSONObject blockData) throws NhzException.ValidationException {
-        try {
-            int version = ((Long)blockData.get("version")).intValue();
-            int timestamp = ((Long)blockData.get("timestamp")).intValue();
-            Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-            long totalAmountNQT;
-            long totalFeeNQT;
-            if (blockData.get("totalAmountNQT") != null) {
-                totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
-                totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
-            } else {
-                totalAmountNQT = Convert.safeMultiply(((Long) blockData.get("totalAmount")), Constants.ONE_NHZ);
-                totalFeeNQT = Convert.safeMultiply(((Long) blockData.get("totalFee")), Constants.ONE_NHZ);
+        int version = ((Long)blockData.get("version")).intValue();
+        int timestamp = ((Long)blockData.get("timestamp")).intValue();
+        Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
+        long totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
+        long totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
+        int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
+        byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
+        byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
+        byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
+        byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
+        byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
+
+        SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
+        JSONArray transactionsData = (JSONArray)blockData.get("transactions");
+        for (Object transactionData : transactionsData) {
+            TransactionImpl transaction = transactionProcessor.parseTransaction((JSONObject) transactionData);
+            if (blockTransactions.put(transaction.getId(), transaction) != null) {
+                throw new NhzException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
             }
-            int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-            byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
-            byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
-            byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
-            byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
-            byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
-
-            SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
-            JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-            for (Object transactionData : transactionsData) {
-                TransactionImpl transaction = transactionProcessor.parseTransaction((JSONObject) transactionData);
-                if (blockTransactions.put(transaction.getId(), transaction) != null) {
-                    throw new NhzException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
-                }
-            }
-
-            return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
-                    generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
-
-        } catch (RuntimeException e) {
-            throw new NhzException.ValidationException(e.toString(), e);
         }
+
+        return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
+                generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
     }
 
     private boolean verifyVersion(Block block, int currentHeight) {
@@ -825,7 +825,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         : 3);
     }
 
-    private volatile boolean validateAtScan = false;
+    private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
+        if (transaction.getReferencedTransactionFullHash() == null) {
+            return timestamp - transaction.getTimestamp() < 60 * 1440 * 60 && count < 10;
+        }
+        transaction = TransactionDb.findTransactionByFullHash(transaction.getReferencedTransactionFullHash());
+        return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
+    }
+
+    private volatile boolean validateAtScan = Nhz.getBooleanProperty("nhz.forceValidate");
 
     void validateAtNextScan() {
         validateAtScan = true;
@@ -841,13 +849,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Account.clear();
             Alias.clear();
             Asset.clear();
-            Generator.clear();
             Order.clear();
             Poll.clear();
             Trade.clear();
             Vote.clear();
             DigitalGoodsStore.clear();
-            transactionProcessor.clear();
             try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
                 BlockImpl currentBlock;
@@ -889,6 +895,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new RuntimeException(e.toString(), e);
             }
             validateAtScan = false;
+            transactionProcessor.clear();
+            Generator.clear();
             Logger.logMessage("...done");
             isScanning = false;
         } // synchronized

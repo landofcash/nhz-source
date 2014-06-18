@@ -61,7 +61,6 @@ public final class Peers {
     static final int blacklistingPeriod;
 
     static final int DEFAULT_PEER_PORT = 7774;
-    static final int TESTNET_PEER_PORT = 6874;
     private static final String myPlatform;
     private static final String myAddress;
     private static final int myPeerServerPort;
@@ -117,12 +116,12 @@ public final class Peers {
             try {
                 URI uri = new URI("http://"+myAddress.trim());
                 String host = uri.getHost();
-                int port = uri.getPort();
+                int port = uri.getPort();  
                     if (port >= 0)
                         json.put("announcedAddress", myAddress);
                     else
                         json.put("announcedAddress", host+(myPeerServerPort!=DEFAULT_PEER_PORT ? ":"+myPeerServerPort : ""));
-                
+               
             } catch (URISyntaxException e) {
                 Logger.logMessage("Your announce address is invalid: " + myAddress);
                 throw new RuntimeException(e.toString(), e);
@@ -454,7 +453,6 @@ public final class Peers {
         PeerImpl peer = peers.get(peerAddress);
         if (peer == null) {
             peer = new PeerImpl(peerAddress, announcedPeerAddress);
-    
             peers.put(peerAddress, peer);
             listeners.notify(peer, Event.NEW_PEER);
         }

@@ -39,12 +39,14 @@ final class JSONData {
             json.put("unconfirmedBalanceNQT", "0");
             json.put("effectiveBalanceNHZ", "0");
             json.put("forgedBalanceNQT", "0");
+            json.put("guaranteedBalanceNQT", "0");
         } else {
             synchronized (account) { // to make sure balance and unconfirmedBalance are consistent
                 json.put("balanceNQT", String.valueOf(account.getBalanceNQT()));
                 json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
                 json.put("effectiveBalanceNHZ", account.getEffectiveBalanceNHZ());
                 json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
             }
         }
         return json;
@@ -201,7 +203,6 @@ final class JSONData {
         json.put("recipientRS", Convert.rsAccount(transaction.getRecipientId()));
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
-        json.put("referencedTransaction", Convert.toUnsignedLong(transaction.getReferencedTransactionId()));
         if (transaction.getReferencedTransactionFullHash() != null) {
             json.put("referencedTransactionFullHash", transaction.getReferencedTransactionFullHash());
         }
@@ -217,7 +218,6 @@ final class JSONData {
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("senderRS", Convert.rsAccount(transaction.getSenderId()));
-        json.put("hash", transaction.getHash());
         json.put("height", transaction.getHeight());
         return json;
     }

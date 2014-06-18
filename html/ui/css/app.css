@@ -21,12 +21,16 @@
 */
 html,
 body {
+  overflow-x:hidden;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100%;
   background: #f9f9f9;
   color: black !important;
+}
+html.lockscreen, html.lockscreen body {
   height:100%;
+  overflow-x:auto;
 }
 a {
   color: #009540;
@@ -1779,7 +1783,7 @@ body > .header .logo .icon {
 .btn.btn-primary:active,
 .btn.btn-primary.hover {
   background-color: #FBFBFB;
-  color: #009540;
+  cikir; #009540;
 }
 .btn.btn-success {
   background-color: #00a65a;
@@ -2104,7 +2108,7 @@ body > .header .logo .icon {
 /* ADD THIS CLASS TO THE <HTML> TAG */
 .lockscreen {
   background-color: #9DC7A9; /*WESLEY */
-  background: url(../img/nhz-background.jpg) repeat center center fixed;
+    background: url(../img/nhz-background.jpg) repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -2225,6 +2229,8 @@ body > .header .logo .icon {
 .logo > a {
   color: #f9f9f9;
 }
+.logo:hover {
+  background: #357ca5;
 }
 /* Skin-blue user panel */
 .user-panel > .image > img {
@@ -3288,4 +3294,17 @@ hr {
   display:none;
   margin-top:10px;
   border-bottom:1px solid #ddd;
+}
+
+.owns_asset {
+  background-color:#FFFFD5;
+}
+
+.asset_owner td {
+  background-color:#FFFFD5 !important;
+}
+
+
+.list-group-item.owns_asset.active, .list-group-item.owns_asset:hover {
+  border-right:5px solid #FFE545 !important;
 }

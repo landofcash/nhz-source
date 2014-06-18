@@ -42,6 +42,16 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $form = $modal.find("form:first");
 
+		if (NRS.downloadingBlockchain) {
+			$modal.find(".error_message").html("Please wait until the blockchain has finished downloading.").show();
+			NRS.unlockForm($modal, $btn);
+			return;
+		} else if (NRS.state.isScanning) {
+			$modal.find(".error_message").html("The blockchain is currently being rescanned. Please wait a minute and then try submitting again.").show();
+			NRS.unlockForm($modal, $btn);
+			return;
+		}
+
 		var invalidElement = false;
 
 		$form.find(":input").each(function() {
@@ -147,7 +157,7 @@ var NRS = (function(NRS, $, undefined) {
 					$modal.find(".error_message").html(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.").show();
 				}
 				NRS.unlockForm($modal, $btn);
-			} else if (response.hash) {
+			} else if (response.fullHash) {
 				//should we add a fake transaction to the recent transactions?? or just wait until the next block comes!??
 				NRS.unlockForm($modal, $btn);
 
@@ -157,15 +167,26 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (successMessage) {
 					$.growl(successMessage.escapeHTML(), {
-						type: 'success'
+						type: "success"
 					});
 				}
 
 				var formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
 
-				if (typeof formCompleteFunction == 'function') {
+				if (typeof formCompleteFunction == "function") {
 					data.requestType = requestType;
-					formCompleteFunction(response, data);
+
+					if (response.transaction) {
+						NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
+							response.alreadyProcessed = alreadyProcessed;
+							formCompleteFunction(response, data);
+						});
+					} else {
+						response.alreadyProcessed = false;
+						formCompleteFunction(response, data);
+					}
+				} else {
+					NRS.addUnconfirmedTransaction(response.transaction);
 				}
 
 				if (NRS.accountInfo && !NRS.accountInfo.publicKey) {

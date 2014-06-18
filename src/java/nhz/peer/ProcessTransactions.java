@@ -15,7 +15,11 @@ final class ProcessTransactions extends PeerServlet.PeerRequestHandler {
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
-        Nhz.getTransactionProcessor().processPeerTransactions(request);
+        try {
+            Nhz.getTransactionProcessor().processPeerTransactions(request);
+        } catch (RuntimeException e) {
+            peer.blacklist(e);
+        }
 
         return JSON.emptyJSON;
     }

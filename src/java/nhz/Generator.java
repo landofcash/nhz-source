@@ -34,12 +34,6 @@ public final class Generator {
         public void run() {
 
             try {
-                if (Nhz.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
-                    return;
-                }
-                if (Nhz.getBlockchainProcessor().isScanning()) {
-                    return;
-                }
                 try {
                     for (Generator generator : generators.values()) {
                         generator.forge();
@@ -165,6 +159,10 @@ public final class Generator {
 
     private void forge() {
 
+        if (Nhz.getBlockchainProcessor().isScanning()) {
+            return;
+        }
+
         Account account = Account.getAccount(accountId);
         if (account == null) {
             return;
@@ -176,8 +174,7 @@ public final class Generator {
 
         Block lastBlock = Nhz.getBlockchain().getLastBlock();
 
-        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
-            Logger.logDebugMessage("Forging below block " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+        if (lastBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
             return;
         }
 

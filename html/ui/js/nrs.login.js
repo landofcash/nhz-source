@@ -162,6 +162,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (nhzAddress.set(NRS.account)) {
 					NRS.accountRS = nhzAddress.toString();
+				} else {
+					$.growl("Could not generate Reed Solomon address.", {
+						"type": "danger"
+					});
 				}
 
 				NRS.sendRequest("getAccountPublicKey", {
@@ -186,7 +190,7 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 
-					if (NRS.settings["use_reed_solomon"]) {
+					if (NRS.settings["reed_solomon"]) {
 						$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
 					} else {
 						$("#account_id").html(String(NRS.account).escapeHTML()).css("font-size", "14px");
@@ -214,7 +218,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNHZ == 0 || !NRS.isLocalHost) {
+						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNHZ == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
 							$("#forging_indicator").removeClass("forging");
 							$("#forging_indicator span").html("Not Forging");
 							$("#forging_indicator").show();
@@ -241,6 +245,12 @@ var NRS = (function(NRS, $, undefined) {
 
 					NRS.unlock();
 
+					if (NRS.isOutdated) {
+						$.growl("A new NRS release is available. It is recommended that you update.", {
+							"type": "danger"
+						});
+					}
+
 					NRS.setupClipboardFunctionality();
 
 					if (callback) {
@@ -251,42 +261,17 @@ var NRS = (function(NRS, $, undefined) {
 
 					$(window).on("hashchange", NRS.checkLocationHash);
 
-					NRS.sendRequest('getAccountTransactionIds', {
-						"account": NRS.account,
-						"timestamp": 0
-					}, function(response) {
-						if (response.transactionIds && response.transactionIds.length) {
-							var transactionIds = response.transactionIds.reverse().slice(0, 10);
-							var nrTransactions = 0;
-							var transactions = [];
-
-							for (var i = 0; i < transactionIds.length; i++) {
-								NRS.sendRequest('getTransaction', {
-									"transaction": transactionIds[i]
-								}, function(transaction, input) {
-									nrTransactions++;
-
-									transaction.id = input.transaction;
-									transaction.confirmed = true;
-									transactions.push(transaction);
-
-									if (nrTransactions == transactionIds.length) {
-										NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-											NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
-										});
-									}
-								});
-							}
-						} else {
-							NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-								NRS.handleInitialTransactions(unconfirmedTransactions, []);
-							});
-						}
-					});
+					NRS.getInitialTransactions();
 				});
 			});
 		});
 	}
+
+	$("#logout_button_container").on("show.bs.dropdown", function(e) {
+		if (!NRS.isForging) {
+			e.preventDefault();
+		}
+	});
 
 	NRS.showLockscreen = function() {
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {

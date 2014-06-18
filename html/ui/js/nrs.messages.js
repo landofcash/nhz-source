@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 									}
 								});
 
-								var otherUserRS = (otherUser == response.sender ? response.senderRS : response.recipientRS);
+								var otherUserRS = (otherUser == NRS.messages[otherUser][0].sender ? NRS.messages[otherUser][0].senderRS : NRS.messages[otherUser][0].recipientRS);
 
 								sortedMessages.push({
 									"timestamp": NRS.messages[otherUser][NRS.messages[otherUser].length - 1].timestamp,
@@ -111,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.messages = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange) {
+		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 			//save current scrollTop    	
 			var activeAccount = $("#messages_sidebar a.active");
 
@@ -236,6 +236,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (option == "send_nhz") {
 			$("#send_money_recipient").val(account).trigger("blur");
 			$("#send_money_modal").modal("show");
+		} else if (option == "account_info") {
+			NRS.showAccountModal(account);
 		}
 	});
 
@@ -430,16 +432,19 @@ var NRS = (function(NRS, $, undefined) {
 				$.growl(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.", {
 					type: "danger"
 				});
-			} else if (response.hash) {
-				NRS.addUnconfirmedTransaction(response.transaction);
-
+			} else if (response.fullHash) {
 				$.growl("Message sent.", {
 					type: "success"
 				});
 
 				$("#inline_message_text").val("");
 
-				$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
+				NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
+					if (!alreadyProcessed) {
+						$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
+					}
+				});
+
 				//leave password alone until user moves to another page.
 			} else {
 				$.growl("An unknown error occured. Your message may or may not have been sent.", {
@@ -451,8 +456,6 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.sendMessageComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		data.message = data._extra.message;
 
 		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
@@ -466,7 +469,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.currentPage == "messages") {
-			var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0)).getTime();
+			var date = new Date(Date.UTC(2014, 02, 22, 22, 22, 0, 0)).getTime();
 
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
 
@@ -475,6 +478,9 @@ var NRS = (function(NRS, $, undefined) {
 			var $existing = $sidebar.find("a.list-group-item[data-account=" + NRS.getAccountFormatted(data, "recipient") + "]");
 
 			if ($existing.length) {
+				if (response.alreadyProcesed) {
+					return;
+				}
 				$sidebar.prepend($existing);
 				$existing.find("p.list-group-item-text").html(NRS.formatTimestamp(now));
 
@@ -495,7 +501,6 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 	}
-
 
 	return NRS;
 }(NRS || {}, jQuery));

@@ -1,0 +1,206 @@
+{
+	"labels": {
+		"nhz":                       "Nhz",
+		"nxs":                       "Nxs",
+		"general":                   "General",
+		"nhzAccount":                "Nhz Account",
+		"nhzAccountNumber":          "Nhz Account Number",
+		"accountNumber":             "Account Number",
+		"url":                       "URL",
+		"uri":                       "URI",
+		"type":                      "Type",
+		"send":                      "Send",
+		"sendNhz":                   "Send Nhz",
+		"alias":                     "Alias",
+		"sender":                    "Sender",
+		"recipient":                 "Recipient",
+		"amount":                    "Amount",
+		"fee":                       "Fee",
+		"balance":                   "Balance",
+		"forge":                     "Forge",
+		"block":                     "Block",
+		"transaction":               "Transaction",
+		"deadline":                  "Deadline",
+		"deadlineInHours":           "Deadline (in hours)",
+		"deadlineInMinutes":         "Deadline (in minutes)",
+		"noDeadline":                "No deadline...",
+		"generalNotification":       "General Notification",
+		"message":                   "Message",
+		"info":                      "Info",
+		"warning":                   "Warning",
+		"error":                     "Error",
+		"success":                   "Success",
+		"ok":                        "OK",
+		"cancel":                    "Cancel",
+		"cipher":                    "Cipher",
+		"generate":                  "Generate",
+		"testNetwork":               "Test Network",
+
+		"sendMessage":               "Send Message",
+		"registerAlias":             "Register Alias",
+		"updateAlias":               "Update Alias",
+
+		"unlockAccount":             "Unlock Account",
+		"secretPhrase":              "Secret Phrase",
+		"showPhrase":                "Show Phrase",
+		"hint":                      "Hint",
+
+		"auth":                      "Authorization",
+		"authToken":                 "Authorization Token",
+		"generateAuthToken":         "Generate Authorization Token",
+		"website":                   "Website",
+
+		"aboutNxs":                  "About Nxs",
+		"version":                   "Version",
+		"latestVersion":             "Latest Version",
+
+		"qrCode":                    "QR Code",
+
+		"asset":                     "Asset",
+		"ask":                       "Ask",
+		"bid":                       "Bid",
+
+		"assetName":                 "Asset Name",
+		"quantity":                  "Quantity",
+		"description":               "Description",
+
+		"issueAsset":                "Issue Asset",
+		"placeAskOrder":             "Place Ask Order",
+		"placeBidOrder":             "Place Bid Order",
+
+		"transactions":              "Transactions",
+		"accounts":                  "Accounts",
+		"contacts":                  "Contacts",
+		"assetExchange":             "Asset Exchange",
+		"messages":                  "Messages",
+		"aliases":                   "Aliases",
+		"polls":                     "Polls",
+		"peers":                     "Peers",
+		"blocks":                    "Blocks",
+
+		"myTransactions":            "My Transactions",
+		"allTransactions":           "All Transactions",
+
+		"all":                       "All",
+		"received":                  "Received",
+		"sent":                      "Sent",
+		"unconfirmed":               "Unconfirmed",
+		"confirmed":                 "Confirmed",
+		"doubleSpending":            "Double Spending",
+
+		"myMessages":                "My Messages",
+		"allMessages":               "All Messages",
+		"searchMessages":            "Search messages...",
+
+		"unencrypted":               "Unencrypted",
+		"encrypted":                 "Encrypted",
+
+		"encrypt":                   "Encrypt",
+		"decrypt":                   "Decrypt",
+
+		"myAliases":                 "My Aliases",
+		"allAliases":                "All Aliases",
+		"searchAliases":             "Search aliases...",
+
+		"other":                     "Other",
+
+		"activePeers":               "Active Peers",
+		"knownPeers":                "Known Peers",
+		"blacklistedPeers":          "Blacklisted Peers",
+
+		"wellKnown":                 "Well-Known",
+		"announced":                 "Announced",
+
+		"recentBlocks":              "Recent Blocks",
+		"orphanedBlocks":            "Orphaned Blocks",
+
+		"withTransactions":          "With Transactions",
+		"withoutTransactions":       "Without Transactions",
+
+		"confirmation":              "Confirmation",
+		"confirmations":             "Confirmations",
+
+		"connected":                 "Connected",
+		"disconnected":              "Disconnected",
+
+		"downloaded":                "Downloaded",
+		"uploaded":                  "Uploaded",
+
+		"edit":                      "Edit",
+		"update":                    "Update",
+		"updateUri":                 "Update URI"
+	},
+
+	"messages": {
+		"typeSecretPhrase":          "Type a secret phrase to unlock an account...",
+
+		"sendDoubleClick":           "To prevent accidental sending, you must double-click the 'Send' button. This may be disabled in the config settings.",
+
+		"noTransactions":            "There are currently no transactions.",
+		"noTransactionsSub":         "Please adjust category or filters to see transactions.",
+
+		"noMessages":                "There are currently no messages.",
+		"noMessagesSub":             "Please adjust category or filters to see messages.",
+
+		"noAliases":                 "There are currently no aliases.",
+		"noAliasesSub":              "Please adjust category or filters to see aliases.",
+
+		"noPeers":                   "There are currently no peers.",
+		"noPeersSub":                "Please adjust category or filters to see peers.",
+
+		"forgeNextBlock":            "You can forge the next block in:",
+		"noBlocks":                  "There are currently no blocks.",
+		"noBlocksSub":               "Please adjust category or filters to see blocks.",
+
+		"disconnectRemoveFromList":  "Disconnect and remove from list.",
+		"removeFromList":            "Remove from list.",
+
+		"unlockAccount":             "Type in a long, secure phrase. This will be the access code to your account and its funds. Please ensure you do not lose your secret phrase as it will not be able to be recovered. To ensure a secure account, a phrase of 30+ characters is recommended.",
+		"authorizeAccount":          "Type in a website URL and your secret phrase to create an authorization token for your account.",
+		"accountAuthorized":         "Use the authorization token below for the website it was created for ([website]).",
+
+		"aboutNxs":                  "Nxs (\"Nexus\") is an open-source browser-based GUI for the Nhz cryptocurrency client.",
+		"updateNxs":                 "If you are using Linux, you can update Nhz and Nxs by running the \"update.sh\" shell script from the \"installation\" directory. This feature (along with the installation script) is undergoing testing at the moment, so please be wary and file any bugs on Nxs' <a href=\"https://github.com/Regulus343/Nxs/issues\" target=\"_blank\">Issues</a> page. Expect this warning to go away after Nxs' install and update scripts have had more independent testing.",
+
+		"dropFile":                  "Drop file here...",
+		"hashVerified":              "Hash verified!",
+		"hashIncorrect":             "Hash incorrect!",
+
+		"aliasTaken":                "The alias \"[alias]\" is already taken. Please try another alias.",
+		"aliasAvailable":            "The alias \"[alias]\" is available!",
+		"aliasEditable":             "The alias \"[alias]\" belongs to your account and may be updated.",
+
+		"success": {
+			"amountSent":            "You have successfully sent [amount] NXT to [recipient].",
+			"orderPlaced":           "Your order has been placed.",
+			"assetIssued":           "Your asset has been issued.",
+			"aliasRegistered":       "The URI \"[uri]\" has been successfully registered to the alias \"[alias]\"."
+		},
+
+		"errors": {
+			"general":               "Something went wrong. Please try again.",
+			"recipientRequired":     "Please enter a recipient.",
+			"amountGreaterThanZero": "The amount must be greater than 0.",
+			"deadlineWithinLimits":  "The deadline must be between 1 and 24 hours.",
+			"secretPhraseLength":    "Your secret phrase is too short. Please choose a more secure secret phrase.",
+			"secretPhraseRequired":  "Please enter your secret phrase.",
+			"secretPhraseIncorrect": "Your secret phrase is incorrect.",
+			"notEnoughFunds":        "You do not have enough funds available to complete the action."
+		},
+
+		"warnings": {
+			"secretPhraseLength":    "Your secret phrase is too short and may easily be picked up by a hacker. It is strongly recommended you choose a more secure secret phrase."
+		},
+
+		"loading": {
+			"blockchain":            "Loading blockchain",
+			"unlockingAccount":      "Unlocking account",
+			"generatingAuthToken":   "Generating authorization token",
+			"signingTransaction":    "Signing transaction",
+			"issuingAsset":          "Issuing asset",
+			"placingAskOrder":       "Placing ask order",
+			"placingBidOrder":       "Placing bid order",
+			"registeringAlias":      "Registering alias"
+		}
+	}
+}

@@ -118,7 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.incoming.aliases = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange) {
+		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 			NRS.pages.aliases();
 		}
 	}
@@ -206,7 +206,9 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.assignAliasComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
+		if (response.alreadyProcessed) {
+			return;
+		}
 
 		if (NRS.currentPage == "aliases") {
 			var $table = $("#aliases_table tbody");
@@ -253,6 +255,35 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 	}
+
+	$("#asset_search").on("submit", function(e) {
+		e.preventDefault();
+
+		var alias = $.trim($("#asset_search input[name=q]").val());
+
+		NRS.sendRequest("getAliasId", {
+			"alias": alias
+		}, function(response) {
+			if (response.errorCode) {
+				$.growl("No such alias exists.", {
+					"type": "danger"
+				});
+			} else {
+				NRS.sendRequest("getTransaction", {
+					"transaction": response.id
+				}, function(response, input) {
+					if (response.errorCode) {
+						$.growl("Could not find alias transaction.", {
+							"type": "danger"
+						});
+					} else {
+						response.transaction = input.transaction;
+						NRS.showTransactionModal(response);
+					}
+				});
+			}
+		});
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));

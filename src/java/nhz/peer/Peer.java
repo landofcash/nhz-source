@@ -1,6 +1,5 @@
 package nhz.peer;
 
-import nhz.NhzException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -34,7 +33,7 @@ public interface Peer extends Comparable<Peer> {
 
     boolean isBlacklisted();
 
-    void blacklist(NhzException cause);
+    void blacklist(Exception cause);
 
     void blacklist();
 

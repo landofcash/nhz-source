@@ -1,0 +1,29 @@
+(function() {
+  var template = Handlebars.template, templates = Handlebars.templates = Handlebars.templates || {};
+templates['alias.html'] = template({"compiler":[5,">= 2.0.0"],"main":function(depth0,helpers,partials,data) {
+  var stack1, helper, functionType="function", escapeExpression=this.escapeExpression, buffer = "<script id=\"alias-template\" type=\"text/x-handlebars-template\">\n\n	<tr class=\"alias-"
+    + escapeExpression(((helper = helpers.index || (depth0 && depth0.index)),(typeof helper === functionType ? helper.call(depth0, {"name":"index","hash":{},"data":data}) : helper)))
+    + "\" data-filters=\""
+    + escapeExpression(((helper = helpers.filters || (depth0 && depth0.filters)),(typeof helper === functionType ? helper.call(depth0, {"name":"filters","hash":{},"data":data}) : helper)))
+    + "\" data-index=\""
+    + escapeExpression(((helper = helpers.index || (depth0 && depth0.index)),(typeof helper === functionType ? helper.call(depth0, {"name":"index","hash":{},"data":data}) : helper)))
+    + "\" data-alias=\""
+    + escapeExpression(((helper = helpers.alias || (depth0 && depth0.alias)),(typeof helper === functionType ? helper.call(depth0, {"name":"alias","hash":{},"data":data}) : helper)))
+    + "\">\n		<td class=\"icon-cell\">\n			<span class=\"icon icon-star icon-light-yellow\"></span>\n		</td>\n		<td class=\"alias\" data-alias=\""
+    + escapeExpression(((helper = helpers.alias || (depth0 && depth0.alias)),(typeof helper === functionType ? helper.call(depth0, {"name":"alias","hash":{},"data":data}) : helper)))
+    + "\">\n			"
+    + escapeExpression(((helper = helpers.alias || (depth0 && depth0.alias)),(typeof helper === functionType ? helper.call(depth0, {"name":"alias","hash":{},"data":data}) : helper)))
+    + "\n		</td>\n\n		<td class=\"uri\" title=\""
+    + escapeExpression(((helper = helpers.uri || (depth0 && depth0.uri)),(typeof helper === functionType ? helper.call(depth0, {"name":"uri","hash":{},"data":data}) : helper)))
+    + "\" data-uri=\""
+    + escapeExpression(((helper = helpers.uri || (depth0 && depth0.uri)),(typeof helper === functionType ? helper.call(depth0, {"name":"uri","hash":{},"data":data}) : helper)))
+    + "\">\n			";
+  stack1 = ((helper = helpers.uriFormatted || (depth0 && depth0.uriFormatted)),(typeof helper === functionType ? helper.call(depth0, {"name":"uriFormatted","hash":{},"data":data}) : helper));
+  if(stack1 || stack1 === 0) { buffer += stack1; }
+  return buffer + "\n		</td>\n\n		<td class=\"type\" data-type-number=\""
+    + escapeExpression(((helper = helpers.aliasTypeNumber || (depth0 && depth0.aliasTypeNumber)),(typeof helper === functionType ? helper.call(depth0, {"name":"aliasTypeNumber","hash":{},"data":data}) : helper)))
+    + "\">\n			"
+    + escapeExpression(((helper = helpers.aliasType || (depth0 && depth0.aliasType)),(typeof helper === functionType ? helper.call(depth0, {"name":"aliasType","hash":{},"data":data}) : helper)))
+    + "\n		</td>\n\n		<td class=\"actions\">\n			<button class=\"radius icon edit\" data-language-text=\"labels.updateUri\" data-language-attribute=\"title\">\n				<span class=\"icon icon-pencil2\"></span>\n			</button>\n		</td>\n	</tr>\n\n</script>";
+},"useData":true});
+})();

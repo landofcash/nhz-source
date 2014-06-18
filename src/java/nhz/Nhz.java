@@ -25,10 +25,9 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Map;
 
-
 public final class Nhz {
 
-    public static final String VERSION = "NHZ V3.0";
+    public static final String VERSION = "NHZ V3.1";
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -214,7 +213,7 @@ public final class Nhz {
 
             long currentTime = System.currentTimeMillis();
             Logger.logDebugMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
-            Logger.logMessage("Nhz server " + VERSION + " started successfully.");          
+            Logger.logMessage("Nhz server " + VERSION + " started successfully.");
         }
 
         private static void init() {}

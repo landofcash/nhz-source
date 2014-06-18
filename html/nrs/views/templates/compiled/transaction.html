@@ -1,0 +1,66 @@
+(function() {
+  var template = Handlebars.template, templates = Handlebars.templates = Handlebars.templates || {};
+templates['transaction.html'] = template({"1":function(depth0,helpers,partials,data) {
+  return "\n				<span class=\"icon icon-loop2\" title=\"Transaction Time\"></span>\n			";
+  },"3":function(depth0,helpers,partials,data) {
+  return "\n				<span class=\"icon icon-stack\" title=\"Block Time\"></span>\n			";
+  },"5":function(depth0,helpers,partials,data) {
+  return "\n					<span class=\"icon icon-stack\"></span>\n				";
+  },"7":function(depth0,helpers,partials,data) {
+  return "\n					<span class=\"icon icon-user2\"></span>\n				";
+  },"compiler":[5,">= 2.0.0"],"main":function(depth0,helpers,partials,data) {
+  var stack1, helper, functionType="function", escapeExpression=this.escapeExpression, buffer = "<script id=\"transaction-template\" type=\"text/x-handlebars-template\">\n\n	<li class=\"transaction-"
+    + escapeExpression(((helper = helpers.index || (depth0 && depth0.index)),(typeof helper === functionType ? helper.call(depth0, {"name":"index","hash":{},"data":data}) : helper)))
+    + "\" data-filters=\""
+    + escapeExpression(((helper = helpers.filters || (depth0 && depth0.filters)),(typeof helper === functionType ? helper.call(depth0, {"name":"filters","hash":{},"data":data}) : helper)))
+    + "\" data-transaction-id=\""
+    + escapeExpression(((helper = helpers.id || (depth0 && depth0.id)),(typeof helper === functionType ? helper.call(depth0, {"name":"id","hash":{},"data":data}) : helper)))
+    + "\" data-sender=\""
+    + escapeExpression(((helper = helpers.sender || (depth0 && depth0.sender)),(typeof helper === functionType ? helper.call(depth0, {"name":"sender","hash":{},"data":data}) : helper)))
+    + "\" data-recipient=\""
+    + escapeExpression(((helper = helpers.recipient || (depth0 && depth0.recipient)),(typeof helper === functionType ? helper.call(depth0, {"name":"recipient","hash":{},"data":data}) : helper)))
+    + "\">\n		<h5>\n			";
+  stack1 = helpers['if'].call(depth0, (depth0 && depth0.timestampTransaction), {"name":"if","hash":{},"fn":this.program(1, data),"inverse":this.program(3, data),"data":data});
+  if(stack1 || stack1 === 0) { buffer += stack1; }
+  buffer += "\n\n			<span class=\"timestamp\" data-timestamp-numeric=\""
+    + escapeExpression(((helper = helpers.numericTimestamp || (depth0 && depth0.numericTimestamp)),(typeof helper === functionType ? helper.call(depth0, {"name":"numericTimestamp","hash":{},"data":data}) : helper)))
+    + "\">"
+    + escapeExpression(((helper = helpers.formattedTimestamp || (depth0 && depth0.formattedTimestamp)),(typeof helper === functionType ? helper.call(depth0, {"name":"formattedTimestamp","hash":{},"data":data}) : helper)))
+    + "</span>\n\n			<span class=\"readable-timestamp\" data-timestamp=\""
+    + escapeExpression(((helper = helpers.timestamp || (depth0 && depth0.timestamp)),(typeof helper === functionType ? helper.call(depth0, {"name":"timestamp","hash":{},"data":data}) : helper)))
+    + "\">"
+    + escapeExpression(((helper = helpers.readableTimestamp || (depth0 && depth0.readableTimestamp)),(typeof helper === functionType ? helper.call(depth0, {"name":"readableTimestamp","hash":{},"data":data}) : helper)))
+    + "</span>\n		</h5>\n\n		<div class=\"confirmations confirmations-"
+    + escapeExpression(((helper = helpers.numberOfConfirmations || (depth0 && depth0.numberOfConfirmations)),(typeof helper === functionType ? helper.call(depth0, {"name":"numberOfConfirmations","hash":{},"data":data}) : helper)))
+    + "\" title=\""
+    + escapeExpression(((helper = helpers.numberOfConfirmationsTitleText || (depth0 && depth0.numberOfConfirmationsTitleText)),(typeof helper === functionType ? helper.call(depth0, {"name":"numberOfConfirmationsTitleText","hash":{},"data":data}) : helper)))
+    + "\" data-confirmations=\""
+    + escapeExpression(((helper = helpers.numberOfConfirmations || (depth0 && depth0.numberOfConfirmations)),(typeof helper === functionType ? helper.call(depth0, {"name":"numberOfConfirmations","hash":{},"data":data}) : helper)))
+    + "\">\n			<span class=\"icon icon-bars\"></span>\n			<span class=\"number\">"
+    + escapeExpression(((helper = helpers.numberOfConfirmationsFormatted || (depth0 && depth0.numberOfConfirmationsFormatted)),(typeof helper === functionType ? helper.call(depth0, {"name":"numberOfConfirmationsFormatted","hash":{},"data":data}) : helper)))
+    + "</span>\n		</div>\n\n		<div class=\"amount\">\n			<div class=\"amount\">\n				<span class=\"icon icon-nhz-n\"></span>\n				<span class=\"amount\">"
+    + escapeExpression(((helper = helpers.amount || (depth0 && depth0.amount)),(typeof helper === functionType ? helper.call(depth0, {"name":"amount","hash":{},"data":data}) : helper)))
+    + "</span>\n				<span class=\"unit\">NHZ</span>\n\n				<span class=\"fee\">\n					<span class=\"icon icon-plus\"></span> "
+    + escapeExpression(((helper = helpers.fee || (depth0 && depth0.fee)),(typeof helper === functionType ? helper.call(depth0, {"name":"fee","hash":{},"data":data}) : helper)))
+    + "\n				</span>\n			</div>\n\n			<div class=\"additional-data hidden\">\n				<div class=\"alias-data hidden\">\n					<span class=\"icon icon-star icon-light-yellow\" data-language-text=\"labels.alias\" data-language-attribute=\"title\"></span>\n\n					<span class=\"alias\"></span> <span class=\"separator\">:</span> <span class=\"uri\"></span>\n				</div>\n			</div>\n		</div>\n\n		<div class=\"transaction-info\">\n			<a href=\""
+    + escapeExpression(((helper = helpers.senderUrl || (depth0 && depth0.senderUrl)),(typeof helper === functionType ? helper.call(depth0, {"name":"senderUrl","hash":{},"data":data}) : helper)))
+    + "\" target=\"_blank\" class=\""
+    + escapeExpression(((helper = helpers.senderClass || (depth0 && depth0.senderClass)),(typeof helper === functionType ? helper.call(depth0, {"name":"senderClass","hash":{},"data":data}) : helper)))
+    + " sender\" title=\"Sender\">\n				";
+  stack1 = helpers['if'].call(depth0, (depth0 && depth0.forgedBlock), {"name":"if","hash":{},"fn":this.program(5, data),"inverse":this.program(7, data),"data":data});
+  if(stack1 || stack1 === 0) { buffer += stack1; }
+  return buffer + "\n\n				<span class=\"account-number\">"
+    + escapeExpression(((helper = helpers.sender || (depth0 && depth0.sender)),(typeof helper === functionType ? helper.call(depth0, {"name":"sender","hash":{},"data":data}) : helper)))
+    + "</span>\n			</a>\n\n			<span class=\"icon icon-shuffle\"></span> \n\n			<a href=\""
+    + escapeExpression(((helper = helpers.recipientUrl || (depth0 && depth0.recipientUrl)),(typeof helper === functionType ? helper.call(depth0, {"name":"recipientUrl","hash":{},"data":data}) : helper)))
+    + "\" target=\"_blank\" class=\""
+    + escapeExpression(((helper = helpers.recipientClass || (depth0 && depth0.recipientClass)),(typeof helper === functionType ? helper.call(depth0, {"name":"recipientClass","hash":{},"data":data}) : helper)))
+    + " recipient\" title=\"Recipient\">\n				<span class=\"icon icon-user2\"></span>\n				<span class=\"account-number\">"
+    + escapeExpression(((helper = helpers.recipient || (depth0 && depth0.recipient)),(typeof helper === functionType ? helper.call(depth0, {"name":"recipient","hash":{},"data":data}) : helper)))
+    + "</span>\n			</a>\n\n			<a href=\""
+    + escapeExpression(((helper = helpers.transactionUrl || (depth0 && depth0.transactionUrl)),(typeof helper === functionType ? helper.call(depth0, {"name":"transactionUrl","hash":{},"data":data}) : helper)))
+    + "\" target=\"_blank\" class=\"transaction-id\" title=\"Transaction ID\">\n				<span class=\"icon icon-loop2\"></span>\n				<span class=\"transaction-id\">"
+    + escapeExpression(((helper = helpers.id || (depth0 && depth0.id)),(typeof helper === functionType ? helper.call(depth0, {"name":"id","hash":{},"data":data}) : helper)))
+    + "</span>\n			</a>\n		</div>\n	</li>\n\n</script>";
+},"useData":true});
+})();

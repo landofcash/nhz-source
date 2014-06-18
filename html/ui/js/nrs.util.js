@@ -258,17 +258,17 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatOrderPricePerWholeQNT = function(price, decimals) {
-		price = NRS.calculateOrderPricePerWholeQNT(price, decimals);
+		price = NRS.calculateOrderPricePerWholeQNT(price, decimals, true);
 
-		return price;
+		return NRS.format(price);
 	}
 
-	NRS.calculateOrderPricePerWholeQNT = function(price, decimals) {
+	NRS.calculateOrderPricePerWholeQNT = function(price, decimals, returnAsObject) {
 		if (typeof price != "object") {
 			price = new BigInteger(String(price));
 		}
 
-		return NRS.convertToNHZ(price.multiply(new BigInteger("" + Math.pow(10, decimals))));
+		return NRS.convertToNHZ(price.multiply(new BigInteger("" + Math.pow(10, decimals))), returnAsObject);
 	}
 
 	NRS.calculatePricePerWholeQNT = function(price, decimals) {
@@ -396,7 +396,11 @@ var NRS = (function(NRS, $, undefined) {
 		if (parts.length == 1) {
 			var fraction = "00000000";
 		} else if (parts.length == 2) {
-			var fraction = parts[1];
+			if (parts[1].length <= 8) {
+				var fraction = parts[1];
+			} else {
+				var fraction = parts[1].substring(0, 8);
+			}
 		} else {
 			throw "Invalid input";
 		}
@@ -568,7 +572,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatTimestamp = function(timestamp, date_only) {
-		var date = new Date(Date.UTC(2014, 02, 22, 22, 22, 22, 0) + timestamp * 1000);
+		var date = new Date(Date.UTC(2014, 02, 22, 22, 22, 0, 0) + timestamp * 1000);
 
 		if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
 			var d = date.getDate();
@@ -612,7 +616,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatTime = function(timestamp) {
-		var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + timestamp * 1000);
+		var date = new Date(Date.UTC(2014, 02, 22, 22, 22, 0, 0) + timestamp * 1000);
 
 		if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
 			var res = "";
@@ -730,7 +734,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (type == "string" || type == "number") {
 			return String(object).escapeHTML();
-		} else if (NRS.settings["use_reed_solomon"]) {
+		} else if (NRS.settings["reed_solomon"]) {
 			return String(object[acc + "RS"]).escapeHTML();
 		} else {
 			return String(object[acc]).escapeHTML();
@@ -741,7 +745,7 @@ var NRS = (function(NRS, $, undefined) {
 		var elements = "#asset_id_dropdown .dropdown-menu a, #account_id_dropdown .dropdown-menu a";
 
 		if (NRS.isLocalHost) {
-			$("#account_id_dropdown li.remote_only").remove();
+			$("#account_id_dropdown li.remote_only, #asset_info_dropdown li.remote_only").remove();
 		}
 
 		var $el = $(elements);
@@ -778,12 +782,16 @@ var NRS = (function(NRS, $, undefined) {
 			});
 
 			clipboard.on("noflash", function(client, args) {
+				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+				$("#account_id_dropdown, #asset_id").data("toggle", "");
 				$.growl("Your browser doesn't support flash, therefore copy to clipboard functionality will not work.", {
 					"type": "danger"
 				});
 			});
 
 			clipboard.on("wrongflash", function(client, args) {
+				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+				$("#account_id_dropdown, #asset_id").data("toggle", "");
 				$.growl("Your browser flash version is too old. The copy to clipboard functionality needs version 10 or newer.");
 			});
 		}
@@ -795,7 +803,7 @@ var NRS = (function(NRS, $, undefined) {
 				return NRS.account;
 				break;
 			case "account_rs":
-				return NRS.accountInfo.accountRS;
+				return NRS.accountRS;
 				break;
 			case "message_link":
 				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;
@@ -882,7 +890,10 @@ var NRS = (function(NRS, $, undefined) {
 			var value = data[key];
 
 			//no need to mess with input, already done if Formatted is at end of key
-			if (/Formatted$/i.test(key)) {
+			if (/FormattedHTML$/i.test(key)) {
+				key = key.replace("FormattedHTML", "");
+				value = String(value);
+			} else if (/Formatted$/i.test(key)) {
 				key = key.replace("Formatted", "");
 				value = String(value).escapeHTML();
 			} else if (key == "Quantity" && $.isArray(value)) {

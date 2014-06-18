@@ -149,7 +149,7 @@ public abstract class TransactionType {
     // return false iff double spending
     final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
         long totalAmountNQT = Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT());
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             totalAmountNQT = Convert.safeAdd(totalAmountNQT, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (senderAccount.getUnconfirmedBalanceNQT() < totalAmountNQT
@@ -168,7 +168,7 @@ public abstract class TransactionType {
 
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
         senderAccount.addToBalanceNQT(- (Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT())));
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         applyAttachment(transaction, senderAccount, recipientAccount);
@@ -178,7 +178,7 @@ public abstract class TransactionType {
 
     final void undoUnconfirmed(Transaction transaction, Account senderAccount) {
         senderAccount.addToUnconfirmedBalanceNQT(Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         undoAttachmentUnconfirmed(transaction, senderAccount);
@@ -188,7 +188,7 @@ public abstract class TransactionType {
 
     final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
         senderAccount.addToBalanceNQT(Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(- Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         undoAttachment(transaction, senderAccount, recipientAccount);
@@ -373,8 +373,14 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                // can't tell whether Alias existed before and what was its previous uri
-                throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
+                Alias alias = Alias.getAlias(attachment.getAliasName().toLowerCase());
+                if (alias.getId().equals(transaction.getId())) {
+                    Alias.remove(alias);
+                } else {
+                    // alias has been updated, can't tell what was its previous uri
+                    throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                }
             }
 
             @Override
@@ -695,9 +701,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NhzException.ValidationException {
-                if (Nhz.getBlockchain().getLastBlock().getHeight() < Constants.NQT_BLOCK) {
-                    throw new NotYetEnabledException("Account info not yet enabled at height " + Nhz.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
@@ -803,9 +806,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NhzException.ValidationException {
-                if (Nhz.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nhz.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
@@ -912,9 +912,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NhzException.ValidationException {
-                if (Nhz.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nhz.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0
                         || attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH
@@ -951,9 +948,6 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(Transaction transaction) throws NhzException.ValidationException {
-                if (Nhz.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nhz.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
@@ -1096,9 +1090,6 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(Transaction transaction) throws NhzException.ValidationException {
-                if (Nhz.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nhz.getBlockchain().getLastBlock().getHeight());
-                }
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0) {
                     throw new NhzException.ValidationException("Invalid asset order cancellation amount or recipient");
                 }

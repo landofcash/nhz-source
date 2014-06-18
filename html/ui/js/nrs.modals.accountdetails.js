@@ -16,6 +16,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_balance_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.balanceNQT)) + " NHZ");
 			$("#account_balance_unconfirmed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.unconfirmedBalanceNQT)) + " NHZ");
 			$("#account_balance_effective_balance").html(NRS.formatAmount(NRS.accountInfo.effectiveBalanceNHZ) + " NHZ");
+			$("#account_balance_guaranteed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.guaranteedBalanceNQT)) + " NHZ");
 
 			$("#account_balance_public_key").html(String(NRS.accountInfo.publicKey).escapeHTML());
 			$("#account_balance_account_id").html(String(NRS.account).escapeHTML());

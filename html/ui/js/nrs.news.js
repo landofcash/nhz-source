@@ -25,14 +25,18 @@ var NRS = (function(NRS, $, undefined) {
 			};
 
 			var settingsReddit = {
-"limit": 5,
+				"limit": 7,
+				"filterLimit": 5,
 				"layoutTemplate": "<div class='list-group'>{entries}</div>",
 				"entryTemplate": "<a href='{url}' target='_blank' class='list-group-item'><h4 class='list-group-item-heading'>{title}</h4><p class='list-group-item-text'>{shortBodyReddit}</p></a>",
 				"tokens": {
 					"shortBodyReddit": function(entry, tokens) {
 						return entry.contentSnippet.replace("&lt;!-- SC_OFF --&gt;", "").replace("&lt;!-- SC_ON --&gt;", "").replace("[link]", "").replace("[comment]", "");
 					}
-				}, 
+				},
+				"filter": function(entry, tokens) {
+					return tokens.title.indexOf("Donations toward") == -1 && tokens.title.indexOf("NHZ tipping bot has arrived") == -1
+				}
 			};
 
 			$("#nhzforum_news").rss("http://forum.nhzcrypto.org/index.php?type=rss;action=.xml;sa=news;", settings, NRS.newsLoaded);

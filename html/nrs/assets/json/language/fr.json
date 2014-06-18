@@ -1,0 +1,150 @@
+{
+	"labels": {
+		"nhz":                       "Nhz",
+		"accountNumber":             "Numéro de compte",
+		"send":                      "Envoyer",
+		"sendNhz":                   "Envoyer des Nhz",
+		"alias":                     "Alias",
+		"sender":                    "Emetteur",
+		"recipient":                 "Destinataire",
+		"amount":                    "Montant",
+		"fee":                       "Frais",
+		"balance":                   "Balance",
+		"forge":                     "Forge",
+		"block":                     "Bloc",
+		"transaction":               "Transaction",
+		"deadline":                  "Date limite",
+		"deadlineInHours":           "Date limite (en heures)",
+		"deadlineInMinutes":         "Date limite (en minutes)",
+		"noDeadline":                "Sans date limite...",
+		"generalNotification":       "Notifications générales",
+		"message":                   "Message",
+		"info":                      "Info",
+		"warning":                   "Alerte",
+		"error":                     "Erreur",
+		"success":                   "Succès",
+		"ok":                        "OK",
+		"cancel":                    "Annuler",
+		"cipher":                    "*Cipher",
+		"generate":                  "*Generate",
+
+		"unlockAccount":             "Ouvrir le compte",
+		"secretPhrase":              "Phrase secrète",
+		"showPhrase":                "Montrer la phrase",
+		"hint":                      "Indice",
+
+		"auth":                      "*Authorization",
+		"authToken":                 "*Authorization Token",
+		"generateAuthToken":         "*Generate Authorization Token",
+		"website":                   "*Website",
+
+		"qrCode":                    "QR Code",
+
+		"asset":                     "*Asset",
+		"ask":                       "*Ask",
+		"bid":                       "*Bid",
+
+		"assetName":                 "*Asset Name",
+		"quantity":                  "*Quantity",
+		"description":               "*Description",
+
+		"issueAsset":                "*Issue Asset",
+		"placeAskOrder":             "*Place Ask Order",
+		"placeBidOrder":             "*Place Bid Order",
+
+		"transactions":              "Transactions",
+		"accounts":                  "Comptes",
+		"contacts":                  "*Contacts",
+		"assetExchange":             "*Asset Exchange",
+		"messages":                  "*Messages",
+		"aliases":                   "*Aliases",
+		"polls":                     "*Polls",
+		"peers":                     "Pairs",
+		"blocks":                    "Blocs",
+
+		"myTransactions":            "Mes Transactions",
+		"allTransactions":           "Toutes les transactions",
+
+		"all":                       "Toutes",
+		"received":                  "Reçues",
+		"sent":                      "Envoyées",
+		"unconfirmed":               "Non confirmées",
+		"confirmed":                 "Confirmées",
+		"doubleSpending":            "Double dépense",
+
+		"activePeers":               "Pairs actifs",
+		"knownPeers":                "Pairs connus",
+		"blacklistedPeers":          "Pairs en liste noire",
+
+		"wellKnown":                 "De confiance",
+		"announced":                 "Annoncés",
+
+		"recentBlocks":              "Blocs récents",
+		"orphanedBlocks":            "Blocs orphelins",
+
+		"withTransactions":          "Avec transactions",
+		"withoutTransactions":       "Sans transaction",
+
+		"confirmation":              "*Confirmation",
+		"confirmations":             "*Confirmations",
+
+		"connected":                 "*Connected",
+		"disconnected":              "*Disconnected",
+
+		"downloaded":                "*Downloaded",
+		"uploaded":                  "*Uploaded"
+	},
+
+	"messages": {
+		"typeSecretPhrase":          "Entrez une phrase secrète pour accéder au compte...",
+
+		"sendDoubleClick":           "Pour éviter un envoi accidentel, vous devez double-cliquer sur le bouton envoi. Cela peut être modifié dans le panneau de configuration.",
+
+		"noTransactions":            "Il n'y a actuellement pas de transaction.",
+		"noTransactionsSub":         "Merci de définir la catégorie ou les filtres pour voir les transactions.",
+
+		"noPeers":                   "Il n'y a actuellement pas de pair.",
+		"noPeersSub":                "Merci de définir la catégorie ou les filtres pour voir les pairs.",
+
+		"forgeNextBlock":            "Vous pourrez forger le prochain bloc dans :",
+		"noBlocks":                  "Il n'y a actuellement pas de bloc.",
+		"noBlocksSub":               "Merci de définir la catégorie ou les filtres pour voir les blocs.",
+
+		"disconnectRemoveFromList":  "*Disconnect and remove from list.",
+		"removeFromList":            "*Remove from list.",
+
+		"unlockAccount":             "*Type in a long, secure phrase. This will be the access code to your account and its funds. Please ensure you do not lose your secret phrase as it will not be able to be recovered. To ensure a secure account, a phrase of 30+ characters is recommended.",
+		"authorizeAccount":          "*Type in a website URL and your secret phrase to create an authorization token for your account.",
+		"accountAuthorized":         "*Use the authorization token below for the website it was created for ([website]).",
+
+		"success": {
+			"amountSent":            "Vous avez envoyé avec succès [amount] à [recipient].",
+			"orderPlaced":           "*Your order has been placed.",
+			"assetIssued":           "*Your asset has been issued."
+		},
+
+		"errors": {
+			"general":               "Une erreur est survenue. Veuillez reessayer.",
+			"recipientRequired":     "Merci d'entrer un destinataire.",
+			"amountGreaterThanZero": "Le montant doit être supérieur à 0.",
+			"deadlineWithinLimits":  "La date limite doit être entre 1 et 24 heures.",
+			"secretPhraseLength":    "Votre phrase secrète est trop courte. Veuillez choisir une phrase secrète plus longue.",
+			"secretPhraseRequired":  "Veuillez entrer votre phrase secrète.",
+			"secretPhraseIncorrect": "Votre phrase secrète est erronée."
+		},
+
+		"warnings": {
+			"secretPhraseLength":    "Votre phrase secrète est trop courte et pourrait être trouvée par un hacker. Il est fortement recommandé de choisir une phrase secrète plus longue."
+		},
+
+		"loading": {
+			"blockchain":            "Chargement de la blockchain",
+			"unlockingAccount":      "*Unlocking account",
+			"generatingAuthToken":   "*Generating authorization token",
+			"signingTransaction":    "Signature de la transaction",
+			"issuingAsset":          "*Issuing asset",
+			"placingAskOrder":       "*Placing ask order",
+			"placingBidOrder":       "*Placing bid order"
+		}
+	}
+}
