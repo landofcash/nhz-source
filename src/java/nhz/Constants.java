@@ -45,6 +45,8 @@ public final class Constants {
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
     public static final long MIN_HUB_EFFECTIVE_BALANCE = 100000;
 
+    public static final boolean isTestnet = Nhz.getBooleanProperty("nhz.isTestnet");
+
     public static final int ALIAS_SYSTEM_BLOCK = 22;
     public static final int TRANSPARENT_FORGING_BLOCK = 30;
     public static final int ARBITRARY_MESSAGES_BLOCK = 40;
@@ -59,10 +61,11 @@ public final class Constants {
     public static final int FRACTIONAL_BLOCK = 69000;
     public static final int ASSET_EXCHANGE_BLOCK = 70000;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK = 75000;
+    public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP = Integer.MAX_VALUE;
     public static final int VOTING_SYSTEM_BLOCK = Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = Integer.MAX_VALUE;
 
-    static final long UNCONFIRMED_POOL_DEPOSIT_NQT = 100 * ONE_NHZ;
+    static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NHZ;
 
 	public static final long EPOCH_BEGINNING;
     static {

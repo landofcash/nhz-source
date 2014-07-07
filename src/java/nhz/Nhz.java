@@ -27,7 +27,7 @@ import java.util.Map;
 
 public final class Nhz {
 
-    public static final String VERSION = "NHZ V3.1";
+    public static final String VERSION = "NHZ V3.2";
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -147,7 +147,7 @@ public final class Nhz {
         Init.init();
     }
 	
-		public static void upnp() throws Exception {
+	public static void upnp() throws Exception {
 	// UPNP START
 			GatewayDiscover gatewayDiscover = new GatewayDiscover();
 			Logger.logMessage("starting upnp detection");
@@ -174,6 +174,7 @@ public final class Nhz {
 		// UPNP STOP
 	}
 
+
     public static void shutdown() {
         API.shutdown();
         Users.shutdown();
@@ -182,6 +183,7 @@ public final class Nhz {
         ThreadPool.shutdown();
         Db.shutdown();
         Logger.logMessage("Nhz server " + VERSION + " stopped.");
+        Logger.shutdown();
     }
 
     private static class Init {
@@ -195,12 +197,7 @@ public final class Nhz {
 			if (Nhz.getBooleanProperty("nhz.enableUPNP")) {
 				try{upnp();}catch(Exception e){Logger.logMessage("upnp detection failed");}
 			}
-
-            if (! Nhz.getBooleanProperty("nhz.debugJetty")) {
-                System.setProperty("org.eclipse.jetty.LEVEL", "OFF");
-                Logger.logDebugMessage("jetty logging disabled");
-            }
-
+			
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();
@@ -214,6 +211,9 @@ public final class Nhz {
             long currentTime = System.currentTimeMillis();
             Logger.logDebugMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
             Logger.logMessage("Nhz server " + VERSION + " started successfully.");
+            if (Constants.isTestnet) {
+                Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
+            }
         }
 
         private static void init() {}

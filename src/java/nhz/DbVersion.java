@@ -1,7 +1,5 @@
 package nhz;
 
-import nhz.crypto.Crypto;
-import nhz.util.DbIterator;
 import nhz.util.Logger;
 
 import java.sql.Connection;
@@ -145,27 +143,14 @@ final class DbVersion {
             case 36:
                 apply("CREATE TABLE IF NOT EXISTS peer (address VARCHAR PRIMARY KEY)");
             case 37:
-                    apply("INSERT INTO peer (address) VALUES " +
+                apply("INSERT INTO peer (address) VALUES " +
                             "('horizon.nhzcrypto.org'), ('digital.nhzcrypto.org'), ('82.118.242.244'), ('37.187.237.56'), ('37.187.237.211'), ('5.45.97.233'), ('137.117.84.21'), ('54.193.59.188'), ('188.226.217.137'), ('85.25.67.39'), ('198.50.146.167'), ('128.199.197.56'), ('54.186.81.151'), ('188.226.207.183'), ('85.214.65.220'), ('168.63.251.208'), ('80.241.220.178'), ('23.97.166.145'), ('107.170.116.134'), ('37.187.237.150'), ('198.211.122.85'), ('31.19.188.145'), ('37.187.237.114'), ('37.187.225.106'), ('191.235.134.92'), ('37.187.18.97'), ('146.185.168.63'), ('pool.nhzcrypto.org')");
-                
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
             case 39:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_full_hash BINARY(32)");
             case 40:
-                try (DbIterator<? extends Transaction> iterator = Nhz.getBlockchain().getAllTransactions();
-                     Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET full_hash = ? WHERE id = ?")) {
-                    while (iterator.hasNext()) {
-                        Transaction transaction = iterator.next();
-                        pstmt.setBytes(1, Crypto.sha256().digest(transaction.getBytes()));
-                        pstmt.setLong(2, transaction.getId());
-                        pstmt.executeUpdate();
-                    }
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
+                BlockDb.deleteAll();
                 apply(null);
             case 41:
                 apply("ALTER TABLE transaction ALTER COLUMN full_hash SET NOT NULL");

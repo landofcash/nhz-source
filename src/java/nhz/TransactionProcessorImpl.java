@@ -17,8 +17,10 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -221,8 +223,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public Transaction parseTransaction(byte[] bytes) throws NhzException.ValidationException {
-	   Logger.logMessage("parseTransaction");
-	try {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -231,9 +231,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         int timestamp = buffer.getInt();
         short deadline = buffer.getShort();
         byte[] senderPublicKey = new byte[32];
-		//next 2 lines changed for preventing nxt insertions
-		Long recipientId = buffer.getLong();
         buffer.get(senderPublicKey);
+        Long recipientId = buffer.getLong();
         long amountNQT = buffer.getLong();
         long feeNQT = buffer.getLong();
         String referencedTransactionFullHash = null;
@@ -253,10 +252,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         transactionType.loadAttachment(transaction, buffer);
 
         return transaction;
-		 } catch (RuntimeException e) {
-		    Logger.logMessage("Error parsing transaction", e);
-            throw new NhzException.ValidationException(e.toString(), e);
-        }
     }
 
     TransactionImpl parseTransaction(JSONObject transactionData) throws NhzException.ValidationException {
@@ -270,15 +265,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         long amountNQT = (Long) transactionData.get("amountNQT");
         long feeNQT = (Long) transactionData.get("feeNQT");
         String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-        // ugly, remove later:
-        Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-        if (referencedTransactionId != null && referencedTransactionFullHash == null) {
-            Transaction referencedTransaction = Nhz.getBlockchain().getTransaction(referencedTransactionId);
-            if (referencedTransaction != null) {
-                referencedTransactionFullHash = referencedTransaction.getFullHash();
-            }
-        }
-        //
         byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
 
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
@@ -298,11 +284,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     void apply(BlockImpl block) {
         block.apply();
         for (TransactionImpl transaction : block.getTransactions()) {
-            if (! unconfirmedTransactions.containsKey(transaction.getId())) {
-                transaction.applyUnconfirmed();
-            }
-            //TODO: Phaser not yet implemented
-            //Phaser.processTransaction(transaction);
             transaction.apply();
         }
     }
@@ -320,6 +301,29 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
+    void applyUnconfirmed(Set<Long> unapplied) {
+        List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
+        for (Long transactionId : unapplied) {
+            TransactionImpl transaction = unconfirmedTransactions.get(transactionId);
+            if (! transaction.applyUnconfirmed()) {
+                unconfirmedTransactions.remove(transactionId);
+                removedUnconfirmedTransactions.add(transaction);
+            }
+        }
+        if (removedUnconfirmedTransactions.size() > 0) {
+            transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        }
+    }
+
+    Set<Long> undoAllUnconfirmed() {
+        HashSet<Long> undone = new HashSet<>();
+        for (TransactionImpl transaction : unconfirmedTransactions.values()) {
+            transaction.undoUnconfirmed();
+            undone.add(transaction.getId());
+        }
+        return undone;
+    }
+
     void updateUnconfirmedTransactions(BlockImpl block) {
         List<Transaction> addedConfirmedTransactions = new ArrayList<>();
         List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
@@ -329,17 +333,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
                 removedUnconfirmedTransactions.add(removedTransaction);
-            }
-        }
-
-        Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
-        while (iterator.hasNext()) {
-            TransactionImpl transaction = iterator.next();
-            transaction.undoUnconfirmed();
-            if (! transaction.applyUnconfirmed()) {
-                iterator.remove();
-                removedUnconfirmedTransactions.add(transaction);
-                transactionListeners.notify(Collections.singletonList((Transaction)transaction), Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
             }
         }
 
@@ -371,7 +364,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
-                transactions.add(parseTransaction((JSONObject) transactionData));
+                TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
+                transaction.validateAttachment();
+                transactions.add(transaction);
             } catch (NhzException.ValidationException e) {
                 //if (! (e instanceof TransactionType.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());

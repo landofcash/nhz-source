@@ -32,6 +32,7 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
             byte[] bytes = Convert.parseHexString(transactionBytes);
             Transaction transaction = Nhz.getTransactionProcessor().parseTransaction(bytes);
+            transaction.validateAttachment();
 
             JSONObject response = new JSONObject();
 

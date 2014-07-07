@@ -2,6 +2,7 @@ package nhz;
 
 import nhz.crypto.Crypto;
 import nhz.util.Convert;
+import nhz.util.Logger;
 import org.json.simple.JSONObject;
 
 import java.math.BigInteger;
@@ -248,18 +249,16 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public byte[] getBytes() {
-
+		//Logger.logMessage("TRANSACTION: getBytes() timestamp " + timestamp + " receipient " + recipientId + " use nqt: " + useNQT() + " height " + Nhz.getBlockchain().getHeight() + " " + this.height + "\n");
         ByteBuffer buffer = ByteBuffer.allocate(getSize());
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.put(type.getType());
         buffer.put(type.getSubtype());
         buffer.putInt(timestamp);
         buffer.putShort(deadline);
+        buffer.put(senderPublicKey);
+        buffer.putLong(Convert.nullToZero(recipientId));
         if (useNQT()) {
-		//next 2 lines changed for preventing nxt insertions
-		    
-		    buffer.put(senderPublicKey);
-			buffer.putLong(Convert.nullToZero(recipientId));
             buffer.putLong(amountNQT);
             buffer.putLong(feeNQT);
             if (referencedTransactionFullHash != null) {
@@ -268,8 +267,6 @@ final class TransactionImpl implements Transaction {
                 buffer.put(new byte[32]);
             }
         } else {
-			buffer.put(senderPublicKey);
-			buffer.putLong(Convert.nullToZero(recipientId));
             buffer.putInt((int)(amountNQT / Constants.ONE_NHZ));
             buffer.putInt((int)(feeNQT / Constants.ONE_NHZ));
             if (referencedTransactionFullHash != null) {
@@ -375,7 +372,8 @@ final class TransactionImpl implements Transaction {
         return data;
     }
 
-    void validateAttachment() throws NhzException.ValidationException {
+    @Override
+    public void validateAttachment() throws NhzException.ValidationException {
         type.validateAttachment(this);
     }
 
@@ -413,6 +411,7 @@ final class TransactionImpl implements Transaction {
         type.undo(this, senderAccount, recipientAccount);
     }
 
+    /*
     void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
         Long senderId = getSenderId();
         Long accumulatedAmount = accumulatedAmounts.get(senderId);
@@ -422,6 +421,7 @@ final class TransactionImpl implements Transaction {
         accumulatedAmounts.put(senderId, Convert.safeAdd(accumulatedAmount, Convert.safeAdd(amountNQT, feeNQT)));
         type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
     }
+    */
 
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
         return type.isDuplicate(this, duplicates);

@@ -27,6 +27,8 @@ import java.util.Set;
 
 public final class API {
 
+    private static final int TESTNET_API_PORT = 6876;
+
     static final Set<String> allowedBotHosts;
 
     private static final Server apiServer;
@@ -41,7 +43,7 @@ public final class API {
 
         boolean enableAPIServer = Nhz.getBooleanProperty("nhz.enableAPIServer");
         if (enableAPIServer) {
-            final int port = Nhz.getIntProperty("nhz.apiServerPort");
+            final int port = Constants.isTestnet ? TESTNET_API_PORT : Nhz.getIntProperty("nhz.apiServerPort");
             final String host = Nhz.getStringProperty("nhz.apiServerHost");
             apiServer = new Server();
             ServerConnector connector;

@@ -53,7 +53,6 @@ public final class APIServlet extends HttpServlet {
 
         Map<String,APIRequestHandler> map = new HashMap<>();
 
-        map.put("assignAlias", AssignAlias.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
         map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
@@ -69,21 +68,21 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAlias", GetAlias.instance);
-        map.put("getAliasId", GetAliasId.instance);
-        map.put("getAliasIds", GetAliasIds.instance);
-        map.put("getAliasURI", GetAliasURI.instance);
+        map.put("getAliases", GetAliases.instance);
         map.put("getAllAssets", GetAllAssets.instance);
         map.put("getAsset", GetAsset.instance);
         map.put("getAssets", GetAssets.instance);
         map.put("getAssetIds", GetAssetIds.instance);
         map.put("getAssetsByIssuer", GetAssetsByIssuer.instance);
-        map.put("getAssetsByName", GetAssetsByName.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);
+        if (Constants.isTestnet) {
+            map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
+        }
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
         map.put("getPoll", GetPoll.instance);
@@ -107,7 +106,6 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrders", GetBidOrders.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("leaseBalance", LeaseBalance.instance);
-        map.put("listAccountAliases", ListAccountAliases.instance);
         map.put("markHost", MarkHost.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
@@ -115,6 +113,7 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
+        map.put("setAlias", SetAlias.instance);
         map.put("signTransaction", SignTransaction.instance);
         map.put("startForging", StartForging.instance);
         map.put("stopForging", StopForging.instance);

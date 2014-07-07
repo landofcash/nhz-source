@@ -197,7 +197,14 @@ public final class Generator {
                     .multiply(BigInteger.valueOf(effectiveBalance))
                     .multiply(BigInteger.valueOf(elapsedTime));
             if (hits.get(accountId).compareTo(target) < 0) {
+			if (!Nhz.getBooleanProperty("nhz.dontForge"))
+			{
                 BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
+			}
+			else
+			{
+				Logger.logMessage("Forging is disabled in config!");
+			}
             }
         }
 

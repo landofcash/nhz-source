@@ -61,6 +61,7 @@ public final class Peers {
     static final int blacklistingPeriod;
 
     static final int DEFAULT_PEER_PORT = 7774;
+    static final int TESTNET_PEER_PORT = 6874;
     private static final String myPlatform;
     private static final String myAddress;
     private static final int myPeerServerPort;
@@ -89,9 +90,13 @@ public final class Peers {
 
         myPlatform = Nhz.getStringProperty("nhz.myPlatform");
         myAddress = Nhz.getStringProperty("nhz.myAddress");
-       
+        if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && ! Constants.isTestnet) {
+            throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
+        }
         myPeerServerPort = Nhz.getIntProperty("nhz.peerServerPort");
-       
+        if (myPeerServerPort == TESTNET_PEER_PORT && ! Constants.isTestnet) {
+            throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
+        }
         shareMyAddress = Nhz.getBooleanProperty("nhz.shareMyAddress");
         myHallmark = Nhz.getStringProperty("nhz.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
@@ -116,12 +121,15 @@ public final class Peers {
             try {
                 URI uri = new URI("http://"+myAddress.trim());
                 String host = uri.getHost();
-                int port = uri.getPort();  
+                int port = uri.getPort();
+                if (!Constants.isTestnet) {
                     if (port >= 0)
                         json.put("announcedAddress", myAddress);
                     else
                         json.put("announcedAddress", host+(myPeerServerPort!=DEFAULT_PEER_PORT ? ":"+myPeerServerPort : ""));
-               
+                } else {
+                    json.put("announcedAddress", host);
+                }
             } catch (URISyntaxException e) {
                 Logger.logMessage("Your announce address is invalid: " + myAddress);
                 throw new RuntimeException(e.toString(), e);
@@ -139,7 +147,8 @@ public final class Peers {
         json.put("requestType", "getInfo");
         myPeerInfoRequest = JSON.prepareRequest(json);
 
-        List<String> wellKnownPeersList = Nhz.getStringListProperty("nhz.wellKnownPeers");
+        List<String> wellKnownPeersList = Constants.isTestnet ? Nhz.getStringListProperty("nhz.testnetPeers")
+                : Nhz.getStringListProperty("nhz.wellKnownPeers");
         if (wellKnownPeersList.isEmpty()) {
             wellKnownPeers = Collections.emptySet();
         } else {
@@ -197,7 +206,7 @@ public final class Peers {
             if (Peers.shareMyAddress) {
                 peerServer = new Server();
                 ServerConnector connector = new ServerConnector(peerServer);
-                final int port = Peers.myPeerServerPort;
+                final int port = Constants.isTestnet ? TESTNET_PEER_PORT : Peers.myPeerServerPort;
                 connector.setPort(port);
                 final String host = Nhz.getStringProperty("nhz.peerServerHost");
                 connector.setHost(host);
@@ -388,16 +397,17 @@ public final class Peers {
                 Logger.logDebugMessage("Failed to stop peer server", e);
             }
         }
-        /*
-        StringBuilder buf = new StringBuilder();
-        for (Peer peer : peers.values()) {
-            if (peer.getAnnouncedAddress() != null && peer.shareAddress() && ! peer.isBlacklisted()
-                    && peer.getVersion() != null && peer.getVersion().startsWith("1.")) {
-                buf.append("('").append(peer.getAnnouncedAddress()).append("'), ");
+        String dumpPeersVersion = Nhz.getStringProperty("nhz.dumpPeersVersion");
+        if (dumpPeersVersion != null) {
+            StringBuilder buf = new StringBuilder();
+            for (Peer peer : new HashSet<>(peers.values())) {
+                if (peer.getAnnouncedAddress() != null && peer.shareAddress() && !peer.isBlacklisted()
+                        && peer.getVersion() != null && peer.getVersion().startsWith(dumpPeersVersion)) {
+                    buf.append("('").append(peer.getAnnouncedAddress()).append("'), ");
+                }
             }
+            Logger.logDebugMessage(buf.toString());
         }
-        Logger.logDebugMessage(buf.toString());
-        */
         ThreadPool.shutdownExecutor(sendToPeersService);
 
     }
@@ -453,6 +463,10 @@ public final class Peers {
         PeerImpl peer = peers.get(peerAddress);
         if (peer == null) {
             peer = new PeerImpl(peerAddress, announcedPeerAddress);
+            if (Constants.isTestnet && peer.getPort() > 0 && peer.getPort() != TESTNET_PEER_PORT) {
+                Logger.logDebugMessage("Peer " + peerAddress + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");
+                return null;
+            }
             peers.put(peerAddress, peer);
             listeners.notify(peer, Event.NEW_PEER);
         }

@@ -47,6 +47,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Users {
 
+    private static final int TESTNET_UI_PORT=6875;
+
     private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
     private static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
 
@@ -75,7 +77,7 @@ public final class Users {
 
         boolean enableUIServer = Nhz.getBooleanProperty("nhz.enableUIServer");
         if (enableUIServer) {
-            final int port = Nhz.getIntProperty("nhz.uiServerPort");
+            final int port = Constants.isTestnet ? TESTNET_UI_PORT : Nhz.getIntProperty("nhz.uiServerPort");
             final String host = Nhz.getStringProperty("nhz.uiServerHost");
             userServer = new Server();
             ServerConnector connector;

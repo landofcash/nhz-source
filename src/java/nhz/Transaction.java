@@ -46,6 +46,8 @@ public interface Transaction extends Comparable<Transaction> {
 
     boolean verify();
 
+    void validateAttachment() throws NhzException.ValidationException;
+
     byte[] getBytes();
 
     byte[] getUnsignedBytes();

@@ -260,7 +260,7 @@ final class PeerImpl implements Peer {
                 log = "\"" + address + "\": " + stringWriter.toString();
             }
 
-            URL url = new URL("http://" + address + (port <= 0 ? ":" + Peers.DEFAULT_PEER_PORT : "") + "/nhz");
+            URL url = new URL("http://" + address + (port <= 0 ? ":" + (Constants.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT) : "") + "/nhz");
             connection = (HttpURLConnection)url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);

@@ -26,9 +26,10 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("account", Convert.toUnsignedLong(alias.getAccount().getId()));
         json.put("accountRS", Convert.rsAccount(alias.getAccount().getId()));
-        json.put("alias", alias.getAliasName());
-        json.put("uri", alias.getURI());
+        json.put("aliasName", alias.getAliasName());
+        json.put("aliasURI", alias.getAliasURI());
         json.put("timestamp", alias.getTimestamp());
+        json.put("alias", Convert.toUnsignedLong(alias.getId()));
         return json;
     }
 
@@ -46,7 +47,7 @@ final class JSONData {
                 json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
                 json.put("effectiveBalanceNHZ", account.getEffectiveBalanceNHZ());
                 json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
-                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(40)));
             }
         }
         return json;

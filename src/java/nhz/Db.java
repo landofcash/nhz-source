@@ -17,7 +17,7 @@ public final class Db {
         if (maxCacheSize == 0) {
             maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
         }
-        String dbUrl = Nhz.getStringProperty("nhz.dbUrl");
+        String dbUrl = Constants.isTestnet ? Nhz.getStringProperty("nhz.testDbUrl") : Nhz.getStringProperty("nhz.dbUrl");
         if (! dbUrl.contains("CACHE_SIZE=")) {
             dbUrl += ";CACHE_SIZE=" + maxCacheSize;
         }
