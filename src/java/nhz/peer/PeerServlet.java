@@ -12,13 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,11 +65,11 @@ public final class PeerServlet extends HttpServlet {
                 remoteAddr = "["+remoteAddr+"]";
             peer = Peers.addPeer(remoteAddr, null);
             if (peer == null) {
-                //Logger.logDebugMessage("Rejected request from "+remoteAddr);
+                Logger.logDebugMessage("Rejected request from "+remoteAddr);
                 return;
             }
             if (peer.isBlacklisted()) {
-                //Logger.logDebugMessage("Rejected request from blacklisted peer "+remoteAddr);
+                Logger.logDebugMessage("Rejected request from blacklisted peer "+remoteAddr);
                 return;
             }
 
@@ -85,6 +79,7 @@ public final class PeerServlet extends HttpServlet {
                 request = (JSONObject) JSONValue.parse(reader);
             }
             if (request == null) {
+                Logger.logDebugMessage("No response data. peer "+remoteAddr);
                 return;
             }
 
@@ -94,6 +89,7 @@ public final class PeerServlet extends HttpServlet {
             peer.updateDownloadedVolume(cis.getCount());
             if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
                 peer.blacklist();
+                Logger.logDebugMessage("Bad hallmark. peer "+remoteAddr);
                 return;
             }
 

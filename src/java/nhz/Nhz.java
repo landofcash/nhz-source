@@ -2,28 +2,21 @@ package nhz;
 
 import nhz.http.API;
 import nhz.peer.Peers;
+import nhz.upnp.GatewayDevice;
+import nhz.upnp.GatewayDiscover;
+import nhz.upnp.PortMappingEntry;
 import nhz.user.Users;
 import nhz.util.Logger;
 import nhz.util.ThreadPool;
 
-import nhz.upnp.GatewayDevice;
-import nhz.upnp.GatewayDeviceHandler;
-import nhz.upnp.GatewayDiscover;
-import nhz.upnp.NameValueHandler;
-import nhz.upnp.PortMappingEntry;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-
-import java.net.InetAddress;
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.Map;
 
 public final class Nhz {
 
@@ -195,7 +188,7 @@ public final class Nhz {
             Logger.logMessage("logging enabled");
 			
 			if (Nhz.getBooleanProperty("nhz.enableUPNP")) {
-				try{upnp();}catch(Exception e){Logger.logMessage("upnp detection failed");}
+				try{upnp();}catch(Exception e){Logger.logMessage("upnp detection failed "+e.getMessage());}
 			}
 			
             Db.init();

@@ -81,4 +81,7 @@ public final class Alias {
         return account;
     }
 
+    public String getURI() {
+        return "";
+    }
 }

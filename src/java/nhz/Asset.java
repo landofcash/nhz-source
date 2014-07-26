@@ -95,4 +95,7 @@ public final class Asset {
         return decimals;
     }
 
+    public static List<Asset> getAssets(String s) {
+        return null;
+    }
 }

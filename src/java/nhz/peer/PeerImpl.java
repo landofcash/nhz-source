@@ -5,32 +5,22 @@ import nhz.BlockchainProcessor;
 import nhz.Constants;
 import nhz.TransactionType;
 import nhz.util.Convert;
-import nhz.util.CountingInputStream;
-import nhz.util.CountingOutputStream;
 import nhz.util.Logger;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.StringWriter;
-import java.io.Writer;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -243,13 +233,12 @@ final class PeerImpl implements Peer {
 
     @Override
     public JSONObject send(final JSONStreamAware request) {
-
         JSONObject response;
-
         String log = null;
         boolean showLog = false;
-        HttpURLConnection connection = null;
 
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        CloseableHttpResponse resp = null;
         try {
 
             String address = announcedAddress != null ? announcedAddress : peerAddress;
@@ -261,50 +250,39 @@ final class PeerImpl implements Peer {
             }
 
             URL url = new URL("http://" + address + (port <= 0 ? ":" + (Constants.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT) : "") + "/nhz");
-            connection = (HttpURLConnection)url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.setConnectTimeout(Peers.connectTimeout);
-            connection.setReadTimeout(Peers.readTimeout);
 
-            CountingOutputStream cos = new CountingOutputStream(connection.getOutputStream());
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
-                request.writeJSONString(writer);
+            //request
+            HttpPost httpPost = new HttpPost(url.toURI().toString());
+            if(Peers.myAddress!=null){
+                RequestConfig requestConfig = RequestConfig.custom().setLocalAddress(InetAddress.getByName(Peers.myAddress))
+                        .setConnectTimeout(Peers.connectTimeout).setSocketTimeout(Peers.readTimeout).build();
+                httpPost.setConfig(requestConfig);
+            }else{
+                RequestConfig requestConfig = RequestConfig.custom()
+                        .setConnectTimeout(Peers.connectTimeout).setSocketTimeout(Peers.readTimeout).build();
+                httpPost.setConfig(requestConfig);
             }
-            updateUploadedVolume(cos.getCount());
 
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            StringWriter stringWriter = new StringWriter();
+            request.writeJSONString(stringWriter);
+            String rawJsonRequest=stringWriter.toString();
+            httpPost.setEntity(new StringEntity(rawJsonRequest, "UTF8"));
 
-                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0) {
-                    // inefficient
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[65536];
-                    int numberOfBytes;
-                    try (InputStream inputStream = connection.getInputStream()) {
-                        while ((numberOfBytes = inputStream.read(buffer)) > 0) {
-                            byteArrayOutputStream.write(buffer, 0, numberOfBytes);
-                        }
-                    }
-                    String responseValue = byteArrayOutputStream.toString("UTF-8");
-                    log += " >>> " + responseValue;
-                    showLog = true;
-                    updateDownloadedVolume(responseValue.getBytes("UTF-8").length);
-                    response = (JSONObject) JSONValue.parse(responseValue);
-
-                } else {
-
-                    CountingInputStream cis = new CountingInputStream(connection.getInputStream());
-                    try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
-                        response = (JSONObject)JSONValue.parse(reader);
-                    }
-                    updateDownloadedVolume(cis.getCount());
-
-                }
+            //call and response
+            resp = httpclient.execute(httpPost);
+            //Logger.logMessage("Sent http request."+url.toURI().toString()+" resp code:"+resp.getStatusLine().getStatusCode());
+            HttpEntity respEntity = resp.getEntity();
+            updateUploadedVolume(rawJsonRequest.length());
+            if (resp.getStatusLine().getStatusCode()==200) {
+                String rawJsonResponse=EntityUtils.toString(respEntity);
+                //Logger.logMessage("Parsing response."+url.toURI().toString()+" " + rawJsonResponse);
+                response = (JSONObject)JSONValue.parse(rawJsonResponse);
+                updateDownloadedVolume(rawJsonResponse.length());
 
             } else {
 
                 if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_NON200_RESPONSES) != 0) {
-                    log += " >>> Peer responded with HTTP " + connection.getResponseCode() + " code!";
+                    log += " >>> Peer responded with HTTP " + resp.getStatusLine().getStatusCode() + " code!";
                     showLog = true;
                 }
                 if (state == State.CONNECTED) {
@@ -313,11 +291,11 @@ final class PeerImpl implements Peer {
                     setState(State.NON_CONNECTED);
                 }
                 response = null;
-
             }
-
+            resp.close();
+            EntityUtils.consume(respEntity);
         } catch (RuntimeException|IOException e) {
-            if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException)) {
+            if (!(e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException)) {
                 Logger.logDebugMessage("Error sending JSON request", e);
             }
             if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
@@ -328,18 +306,24 @@ final class PeerImpl implements Peer {
                 setState(State.DISCONNECTED);
             }
             response = null;
-        }
+        } catch (URISyntaxException e) {
+            log += " >>> " + e.toString();
+            showLog = true;
+            response = null;
+        }finally {
+            try {
+                if (httpclient != null) {
+                    httpclient.close();
+                }
 
+            }catch(Exception ex){
+                Logger.logMessage("FATAL ERROR. " +ex);
+            }
+        }
         if (showLog) {
             Logger.logMessage(log + "\n");
         }
-
-        if (connection != null) {
-            connection.disconnect();
-        }
-
         return response;
-
     }
 
     @Override
@@ -395,7 +379,7 @@ final class PeerImpl implements Peer {
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
             if (! hallmark.isValid()
                     || ! (hallmark.getHost().equals(host) || InetAddress.getByName(host).equals(InetAddress.getByName(hallmark.getHost())))) {
-                //Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
+                Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
                 return false;
             }
             this.hallmark = hallmark;

@@ -63,8 +63,8 @@ public final class Peers {
     static final int DEFAULT_PEER_PORT = 7774;
     static final int TESTNET_PEER_PORT = 6874;
     private static final String myPlatform;
-    private static final String myAddress;
-    private static final int myPeerServerPort;
+    protected static final String myAddress;
+    protected static final int myPeerServerPort;
     private static final String myHallmark;
     private static final boolean shareMyAddress;
     private static final int maxNumberOfConnectedPublicPeers;
